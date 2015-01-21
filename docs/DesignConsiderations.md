@@ -1,5 +1,6 @@
-
 # Design Considerations for Data Pipeline Guidance (with Apache Storm)
+
+**Note: this is an unfinished draft. I'll add a lot more content to it**
 
 ## Business Scenario: Store Event Hub Messages to Microsoft Azure Blob
 
@@ -147,3 +148,6 @@ We decided to develop the emulator for send event to event hub based on:
 and here is the GitHub repo for it:
 
 [Blackmist/hdinsight-eventhub-example](https://github.com/Blackmist/hdinsight-eventhub-example)
+
+
+**... to be continued ...**
