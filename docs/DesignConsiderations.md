@@ -32,14 +32,13 @@ If we are using Trident, we can get the **TransactionId** from **TransactionAtte
 
 ## Should we use a Storm topology or Trident topology
 
-In Storm the structure of a distributed computation is referred to as topology and is made up of stream of data, stream producers called spouts, and operations called bolts. Storm topologies run forever, until explicitly killed or un-deployed.
+A Storm structure for distributed computation is called topology.  A topology consists of stream of data, spouts that produce the data, and bots that process the data. Storm topologies run forever, until explicitly killed.
 
-Trident is a high-level abstraction for doing real time computing on top of Storm. It allows you to seamlessly intermix high throughput (millions of messages per second), stateful stream processing with low latency distributed querying. If you’re familiar with high level batch processing tools like Pig or Cascading, the concepts of Trident will be very familiar – Trident has joins, aggregations, grouping, functions, and filters. In addition to these, Trident adds primitives for doing stateful, incremental processing on top of any database or persistence store. Trident has consistent, exactly-once semantics, so it is easy to reason about Trident topologies.
-
-The core scenario is to aggregate individual messages in to a Azure block, the batching feature provided by Trident make it a good choice. We can simply aggregate a batch into a block if the batch can fits. If a batch is bigger than the max size of a block, we can simply split the batch up in to several blocks. the only limitation is that when the batch is smaller than a block, in which case, the block will not be filled up unless we add more customer logic to handle combining multiple batches into a single block.
+Trident is a high-level abstraction for doing real time computing on top of Storm. Trident process messages in batches and it consists of joins, aggregations, grouping, functions, and filters. Trident support exactly-once semantics.
+The core scenario is to aggregate individual messages in to an Azure block, the batching feature provided by Trident make it a good choice. We can simply aggregate a batch into a block if the batch can fits. If a batch is bigger than the max size of a block, we can simply split the batch up in to several blocks. The only limitation is that when the batch is smaller than a block, in which case, the block will not be filled up unless we add more customer logic to handle combining multiple batches into a single block.
 
 ## What are built-in stream groupings in Storm and what kind of grouping do we need for our scenario
-There are seven built-in stream groupings in Storm
+Storm has seven built-in stream groupings:
 1. Shuffle grouping
 2. Fields grouping
 3. All grouping
@@ -48,15 +47,15 @@ There are seven built-in stream groupings in Storm
 6. Direct grouping
 7. Local or shuffle grouping
 
-We need to have all messaged in a event hub partition stored in the same Azure blobs. So if we decide to use Storm, it's natural that we want use Fields grouping with partitionId. That means that the spout need to emit the partitionID.
+We need to have all messaged in an event hub partition stored in the same Azure blobs. So if we decide to use Storm, it's natural that we want use Fields grouping with partitionId. That means that the spout need to emit the partitionID.
 
 However, if we use Trident, the core data model in Trident is the "Stream", processed as a series of batches. A stream is partitioned among the nodes in the cluster, and operations applied to a stream are applied in parallel across each partition. No explicit grouping is needed for partitionID.
 
-## What are Trident the operations and which are need for our scenario
+## What are Trident the operations and which are need for our scenario?
 There are five kinds of operations in Trident:
-1.  Partition-local Operations: Operations that apply locally to each partition and cause no network transfer
-2.  Repartitioning operations that repartition a stream but otherwise don't change the contents (involves network transfer)
-3.  Aggregation operations that do network transfer as part of the operation
+1.  Partition-local Operations:
+2.  Repartitioning operations
+3.  Aggregation operations
 4.  Operations on grouped streams
 5.  Merges and joins
 
@@ -64,14 +63,7 @@ We want to messages in each partition to be aggregated and stored in its corresp
 
 ## What are Partition-local Operations in Trident
 Partition-local operations involve no network transfer and are applied to each batch partition independently. They include **Functions**, **Filters**, and **partitionAggregate**.
-
-A **function** takes in a set of input fields and emits zero or more tuples as output. The fields of the output tuple are appended to the original input tuple in the stream. If a function emits no tuples, the original input tuple is filtered out. Otherwise, the input tuple is duplicated for each output tuple.
-
-**Filters** take in a tuple as input and decide whether or not to keep that tuple or not.
-
-**partitionAggregate** runs a function on each partition of a batch of tuples. Unlike functions, the tuples emitted by partitionAggregate replace the input tuples given to it. There are three different interfaces for defining aggregators: **CombinerAggregator**, **ReducerAggregator**, and **Aggregator**.
-
-To support the exactly-once-semantics, we need to know whether we are in the replay, whether all the tuples in a batch are processed. We decide to used the most general interface: **Aggregator""
+To support the exact once semantics, we need to know whether we are in the replay, whether all the tuples in a batch are processed. We decide to use the most general interface: **Aggregator""
 
 ## What is an Aggregator and why it fits our needs
 The most general interface for performing aggregations is Aggregator, which looks like this:
@@ -85,8 +77,8 @@ public interface Aggregator<T> extends Operation {
 ```
 Aggregators can emit any number of tuples with any number of fields. They can emit tuples at any point during execution. Aggregators execute in the following way:
 
-1.  The init method is called before processing the batch. The return value of init is an Object that will represent the state of the aggregation and will be passed into the aggregate and complete methods.
-2.  The aggregate method is called for each input tuple in the batch partition. This method can update the state and optionally emit tuples.
+1.  The init method is called before processing the batch.
+2.  The aggregate method is called for each input tuple in the batch partition.
 3.  The complete method is called when all tuples for the batch partition have been processed by aggregate.
 
 Let's call our aggregator ByteAggregator, we can extends the BaseAggregator instead of directly implemenat the Aggregator interface:
