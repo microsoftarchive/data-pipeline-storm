@@ -1,11 +1,11 @@
 # Data Pipeline Guidance (with Apache Storm)
-_Microsoft patterns & practices_
+[Microsoft patterns & practices](http://aka.ms/mspnp)
 
 This project focuses on using Apache Storm/Trident with Java. For guidance on
 using .NET _without_ Storm, see the companion
 [Data Pipeline Guidance](https://github.com/mspnp/data-pipeline).
 
-##Overview
+## Overview
 
 The two primary concerns of this project are:
 
