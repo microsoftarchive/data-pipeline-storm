@@ -1,7 +1,7 @@
 # Getting Started with the Reference Implementation
 Store Event Hub Messages to Microsoft Azure Blob with Trident
 
-*Microsoft patterns & practices*
+[Microsoft patterns & practices](http://aka.ms/mspnp)
 
 ## Prerequisites
 - An Azure subscription
