@@ -1,10 +1,10 @@
-# Design Considerations for Data Pipeline Guidance (with Apache Storm)
+# Design Considerations for Data Pipeline Guidance (with Apache Storm) and Technical How-To
 
 **Note: this is an unfinished draft. I'll add a lot more content to it**
 
 ## Business Scenario: Store Event Hub Messages to Microsoft Azure Blob
 
-Connected cars send their status (diagnosis code) to event hub together with their location (latitude and longitude) and timestamp. We want to combine those status information and store them in Microsoft Azure blob.
+Connected cars send their status (diagnosis code) to event hub together with their location (latitude and longitude) and time stamp. We want to combine those status information and store them in Microsoft Azure blob.
 
 ## Batching
 
@@ -30,14 +30,14 @@ However, the replay only guarantees at-least-once processing of the messages. It
 
 If we are using Trident, we can get the **TransactionId** from **TransactionAttempt** object, which is passed in as an Object in the **Aggregator** init method.  During a replay, the value of TransactionId will be the same as the that of the previous batch.  If we save the previous TransactionId, all we need to do if to compare the current value with the saved value. If the value is the same, we are inside a replay. If there are different, we are inside a fresh new batch.
 
-## Should we use a Storm topology or Trident topology
+## Should we use a Storm topology or Trident topology?
 
 A Storm structure for distributed computation is called topology.  A topology consists of stream of data, spouts that produce the data, and bots that process the data. Storm topologies run forever, until explicitly killed.
 
 Trident is a high-level abstraction for doing real time computing on top of Storm. Trident process messages in batches and it consists of joins, aggregations, grouping, functions, and filters. Trident support exactly-once semantics.
 The core scenario is to aggregate individual messages in to an Azure block, the batching feature provided by Trident make it a good choice. We can simply aggregate a batch into a block if the batch can fits. If a batch is bigger than the max size of a block, we can simply split the batch up in to several blocks. The only limitation is that when the batch is smaller than a block, in which case, the block will not be filled up unless we add more customer logic to handle combining multiple batches into a single block.
 
-## What are built-in stream groupings in Storm and what kind of grouping do we need for our scenario
+## What are built-in stream groupings in Storm and what kind of grouping do we need for our scenario?
 Storm has seven built-in stream groupings:
 1. Shuffle grouping
 2. Fields grouping
@@ -61,11 +61,11 @@ There are five kinds of operations in Trident:
 
 We want to messages in each partition to be aggregated and stored in its corresponding Azure blobs. So we should pick the first one: Operations that apply locally to each partition and cause no network transfer.
 
-## What are Partition-local Operations in Trident
+## What are Partition-local Operations in Trident?
 Partition-local operations involve no network transfer and are applied to each batch partition independently. They include **Functions**, **Filters**, and **partitionAggregate**.
 To support the exact once semantics, we need to know whether we are in the replay, whether all the tuples in a batch are processed. We decide to use the most general interface: **Aggregator""
 
-## What is an Aggregator and why it fits our needs
+## What is an Aggregator and why it fits our needs?
 The most general interface for performing aggregations is Aggregator, which looks like this:
 
 ``` java
@@ -80,7 +80,7 @@ Aggregators can emit any number of tuples with any number of fields. They can em
 1.  The init method is called before processing the batch.
 2.  The aggregate method is called for each input tuple in the batch partition.
 3.  The complete method is called when all tuples for the batch partition have been processed by aggregate.
-
+## What’s the implementation of ByteAggregator?
 Let's call our aggregator ByteAggregator, we can extends the BaseAggregator instead of directly implemenat the Aggregator interface:
 
 ``` java
@@ -123,7 +123,7 @@ Here are the key point of ByteAggregate class:
 3. tuple string is added into to the block data in aggregate method.
 4. the state is persisted in the complete method.
 
-## How to create a Storm or Trident project
+## How to create a Storm or Trident project?
 1.	mvn archetype:generate -DgroupId=com.mycompany.app -DartifactId=my-app -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 2.	Edit the pom.xml  file and add the Storm dependency:
 <dependency> <groupId>org.apache.storm</groupId> <artifactId>storm-core</artifactId> <version>0.9.1-incubating</version> </dependency>
@@ -133,13 +133,86 @@ Here are the key point of ByteAggregate class:
 6.  add class to build the topology
 5.	F11 to test locally (in Eclipse) or deploy jar file to a storm headnote
 
-## How to send event to Event Hub
+## How to send event to Event Hub?
 We decided to develop the emulator for send event to event hub based on:
 [Analyzing sensor data with Storm and HBase in HDInsight (Hadoop)](http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-sensor-data-analysis/)
 
-and here is the GitHub repo for it:
+The following is the GitHub repo for it:
 
 [Blackmist/hdinsight-eventhub-example](https://github.com/Blackmist/hdinsight-eventhub-example)
+## Is there any existing storm spout for event hub?
+Yes. [Analyzing sensor data with Storm and HBase in HDInsight (Hadoop)](http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-sensor-data-analysis/) has the sample code for using storm spout for event hub.
+## How to use the eventhub spout included in the HDI Storm in your java program?
+Here are the steps:
+•	Copy the jar file C:\apps\dist\storm-0.9.1.2.1.6.0-2103\examples\eventhubspout\eventhubs-storm-spout-0.9-jar-with-dependencies.jar from the HDI storm head node to your development PC.
+•	Add that jar file to the local maven repo:
+mvn install:install-file -Dfile=eventhubs-storm-spout-0.9-jar-with-dependencies.jar -DgroupId=com.microsoft.eventhubs -DartifactId=eventhubs-storm-spout -Dversion=0.9 -Dpackaging=jar
+•	Add the jar to the pom:
+
+```
+<dependency>
+      <groupId>com.microsoft.eventhubs</groupId>
+      <artifactId>eventhubs-storm-spout</artifactId>
+      <version>0.9</version>
+</dependency>
+```
+
+•Enable distribution of the jar file by adding the following to the pom after ```<build><plugins>```:
+
+
+```
+<plugin>
+<groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-shade-plugin</artifactId>
+<version>2.3</version>
+
+<configuration>
+<createDependencyReducedPom>true</createDependencyReducedPom>
+<transformers>
+<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer">
+</transformer>
+</transformers>
+</configuration>
+<executions><execution>
+<phase>package</phase>
+<goals><goal>shade</goal></goals>
+<configuration>
+<transformers>
+<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+<mainClass></mainClass>
+</transformer>
+</transformers>
+</configuration>
+</execution></executions>
+</plugin>
+```
+
+## Is there an existing implementation of trident transactional spout for event hub?
+The storm cluster headnode C:\apps\dist\storm-0.9.1.2.1.6.0-2103\examples\eventhubspout\eventhubs-storm-spout-0.9-jar-with-dependencies.jar consists of two trident spout
+•	OpaqueTridentEventHubSpout
+•	TransactionalTridentEventHubSpout
+## How many instances of spout should I have?
+The number of spout should be equal to the number of event hub partitions.
+```
+EventHubSpoutConfig spoutConfig = new EventHubSpoutConfig(…,eventHubPartitionCount,…);
+OpaqueTridentEventHubSpout spout = new OpaqueTridentEventHubSpout(spoutConfig);
+```
+## How to configure the topology so that each partitioned aggregate will read from its corresponding spout?
+
+The number of workers (partitioned aggregate) should be equal to the Event Hub Partition Count.
+
+```
+Int numWorkers = eventHubPartitionCount;
+EventHubSpoutConfig spoutConfig = new EventHubSpoutConfig(…,eventHubPartitionCount,…);
+OpaqueTridentEventHubSpout spout = new OpaqueTridentEventHubSpout(spoutConfig);
+Stream inputStream = tridentTopology.newStream("message", spout);
+inputStream.parallelismHint(numWorkers).partitionAggregate(new Fields("message"), new ByteAggregator(), new Fields("blobname"));
+```
+
+
+
+
 
 
 **... to be continued ...**
