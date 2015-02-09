@@ -196,6 +196,9 @@ hs_err_pid*
 .recommenders/**
 src/.metadata/**
 src/.recommenders/**
+src/eventhub-blobwriter/.metadata/**
+src/eventhub-blobwriter/.recommenders/**
+
 bin/**
 tmp/**
 tmp/**/*
