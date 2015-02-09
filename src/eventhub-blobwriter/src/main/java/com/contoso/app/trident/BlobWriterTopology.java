@@ -18,7 +18,6 @@ public class BlobWriterTopology {
 	static int numWorkers = 1;
 
 	public static void main(String[] args) throws Exception {
-		System.out.println("Loding properties from Config.properties");
 		properties = new Properties();
 		properties.load(BlobWriterTopology.class.getClassLoader().getResourceAsStream("Config.properties"));
 		// properties.load(new FileReader(args[1])); // load properties from a different file
@@ -29,7 +28,6 @@ public class BlobWriterTopology {
 			Config config = new Config();
 			numWorkers = Integer.parseInt(properties.getProperty("eventhubspout.partitions.count"));
 			config.setNumWorkers(numWorkers);
-			System.out.println("Number of workers = " + numWorkers);
 			StormSubmitter.submitTopology(topologyName, config, stormTopology);
 		} else {// if running in local development environment, there is no argument for topology name
 			String topologyName = "localTopology";
@@ -70,15 +68,6 @@ public class BlobWriterTopology {
 		int partitionCount = Integer.parseInt(properties.getProperty("eventhubspout.partitions.count"));
 		int checkpointIntervalInSeconds = Integer.parseInt(properties.getProperty("eventhubspout.checkpoint.interval"));
 		int receiverCredits = Integer.parseInt(properties.getProperty("eventhub.receiver.credits"));
-		System.out.println("Eventhub spout config: ");
-		System.out.println("  username: " + username);
-		System.out.println("  password: " + password);
-		System.out.println("  namespaceName: " + namespaceName);
-		System.out.println("  entityPath: " + entityPath);
-		System.out.println("  zkEndpointAddress: " + zkEndpointAddress);
-		System.out.println("  partition count: " + partitionCount);
-		System.out.println("  checkpoint interval: " + checkpointIntervalInSeconds);
-		System.out.println("  receiver credits: " + receiverCredits);
 		spoutConfig = new EventHubSpoutConfig(username, password, namespaceName, entityPath, partitionCount, zkEndpointAddress, checkpointIntervalInSeconds,
 				receiverCredits);
 		return spoutConfig;
