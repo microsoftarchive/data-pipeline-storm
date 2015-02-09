@@ -14,51 +14,51 @@ import storm.trident.Stream;
 import storm.trident.TridentTopology;
 
 public class BlobWriterTopology {
-	static Properties properties = null;
-	static int numWorkers = 1;
 
 	public static void main(String[] args) throws Exception {
+		Properties properties = null;
+		boolean isLocalCluster = true;
+		String topologyName = "localTopology";
+
+		if ((args != null) && (args.length > 0)) { // if running in storm cluster, the first argument is the topology name
+			topologyName = args[0];
+			isLocalCluster = false;
+		}
+		
 		properties = new Properties();
 		properties.load(BlobWriterTopology.class.getClassLoader().getResourceAsStream("Config.properties"));
 		// properties.load(new FileReader(args[1])); // load properties from a different file
 
-		if ((args != null) && (args.length > 0)) { // if running in storm cluster, the first argument is the topology name
-			String topologyName = args[0];
-			StormTopology stormTopology = buildTopology(topologyName);
-			Config config = new Config();
-			numWorkers = Integer.parseInt(properties.getProperty("eventhubspout.partitions.count"));
-			config.setNumWorkers(numWorkers);
-			StormSubmitter.submitTopology(topologyName, config, stormTopology);
-		} else {// if running in local development environment, there is no argument for topology name
-			String topologyName = "localTopology";
-			StormTopology stormTopology = buildTopology(topologyName);
-			Config config = new Config();
-			config.setMaxTaskParallelism(10);
+		int numWorkers = Integer.parseInt(properties.getProperty("eventhubspout.partitions.count"));
+		Config config = new Config();
+		config.setNumWorkers(numWorkers);
+		config.setMaxTaskParallelism(numWorkers);
+		
+		StormTopology stormTopology = buildTopology(topologyName, numWorkers, properties);
+
+		if(isLocalCluster){
 			LocalCluster localCluster = new LocalCluster();
 			localCluster.submitTopology(topologyName, config, stormTopology);
-			Thread.sleep(5000000L);
-			localCluster.shutdown();
+		}else{
+			StormSubmitter.submitTopology(topologyName, config, stormTopology);			
 		}
 	}
 
-	static StormTopology buildTopology(String topologyName) {
+	static StormTopology buildTopology(String topologyName, int numWorkers,Properties properties) {
 		Redis.flushDB(Redis.getHost(properties), Redis.getPassword(properties));
 		TridentTopology tridentTopology = new TridentTopology();
 		Stream inputStream = null;
-		OpaqueTridentEventHubSpout spout = createOpaqueTridentEventHubSpout(topologyName);
+
+		EventHubSpoutConfig spoutConfig = readConfig(properties);
+		spoutConfig.setTopologyName(topologyName);
+		OpaqueTridentEventHubSpout spout = new OpaqueTridentEventHubSpout(spoutConfig);
 		inputStream = tridentTopology.newStream("message", spout);
 		inputStream.parallelismHint(numWorkers).partitionAggregate(new Fields("message"), new ByteAggregator(properties), new Fields("blobname"));
 		return tridentTopology.build();
 	}
 
-	static OpaqueTridentEventHubSpout createOpaqueTridentEventHubSpout(String topologyName) {
-		EventHubSpoutConfig spoutConfig = readConfig();
-		spoutConfig.setTopologyName(topologyName);
-		OpaqueTridentEventHubSpout spout = new OpaqueTridentEventHubSpout(spoutConfig);
-		return spout;
-	}
 
-	static EventHubSpoutConfig readConfig() {
+	static EventHubSpoutConfig readConfig(Properties properties) {
 		EventHubSpoutConfig spoutConfig;
 		String username = properties.getProperty("eventhubspout.username");
 		String password = properties.getProperty("eventhubspout.password");
