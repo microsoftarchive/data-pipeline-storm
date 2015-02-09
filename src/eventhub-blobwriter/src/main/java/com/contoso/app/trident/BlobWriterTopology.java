@@ -47,7 +47,6 @@ public class BlobWriterTopology {
 		Redis.flushDB(Redis.getHost(properties), Redis.getPassword(properties));
 		TridentTopology tridentTopology = new TridentTopology();
 		Stream inputStream = null;
-		// TestSpout spout = new TestSpout();
 		OpaqueTridentEventHubSpout spout = createOpaqueTridentEventHubSpout(topologyName);
 		inputStream = tridentTopology.newStream("message", spout);
 		inputStream.parallelismHint(numWorkers).partitionAggregate(new Fields("message"), new ByteAggregator(properties), new Fields("blobname"));
