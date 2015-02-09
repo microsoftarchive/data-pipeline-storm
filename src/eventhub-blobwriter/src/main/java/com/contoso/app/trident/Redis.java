@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
 
 package com.contoso.app.trident;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -9,12 +10,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import redis.clients.jedis.Jedis;
+
 @SuppressWarnings("unused")
 public class Redis {
-	private static final Logger logger = (Logger) LoggerFactory.getLogger(Redis.class);
+	private static final Logger logger = (Logger) LoggerFactory
+			.getLogger(Redis.class);
+
 	public static void main(String[] args) {
 		testList();
 	}
+
 	public static void testList() {
 		String host = "hanzredis1.redis.cache.windows.net";
 		String password = "eQoMISLEQf7mwCDetcvIUT+P9WGGK9KGsdf7/UOGkTg=";
@@ -68,7 +73,8 @@ public class Redis {
 			logger.info("flushDB params: host= " + host);
 		}
 
-		Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port, timeout,isSSL
+		Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port,
+															// timeout,isSSL
 		jedis.auth(password);
 		jedis.connect();
 		if (jedis.isConnected()) {
@@ -92,13 +98,14 @@ public class Redis {
 		}
 
 		String value = null;
-		Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port, timeout,isSSL
+		Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port,
+															// timeout,isSSL
 		jedis.auth(password);
 		jedis.connect();
 		if (jedis.isConnected()) {
 			value = jedis.get(key);
 		} else {
-			if (LogSetting.LOG_REDIS) {			
+			if (LogSetting.LOG_REDIS) {
 				logger.info("get connection error !!!!!");
 			}
 		}
@@ -111,19 +118,22 @@ public class Redis {
 		return value;
 	}
 
-	static public void set(String host, String password, String key, String value) {
+	static public void set(String host, String password, String key,
+			String value) {
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("set Begin");
-			logger.info("set params: host= " + host + " key= " + key + " value= " + value);
+			logger.info("set params: host= " + host + " key= " + key
+					+ " value= " + value);
 		}
 
-		Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port, timeout,isSSL
+		Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port,
+															// timeout,isSSL
 		jedis.auth(password);
 		jedis.connect();
 		if (jedis.isConnected()) {
 			jedis.set(key, value);
 		} else {
-			if (LogSetting.LOG_REDIS) {			
+			if (LogSetting.LOG_REDIS) {
 				logger.info("set connection error !!!!!");
 			}
 		}
@@ -134,27 +144,32 @@ public class Redis {
 		}
 	}
 
-	static public List<String> getList(String host, String password, String key, int maxLength) {
+	static public List<String> getList(String host, String password,
+			String key, int maxLength) {
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("getList Begin");
-			logger.info("getList params: host= " + host + " key= " + key + " maxLength= " + maxLength);
+			logger.info("getList params: host= " + host + " key= " + key
+					+ " maxLength= " + maxLength);
 		}
 
-		Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port, timeout,isSSL
+		Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port,
+															// timeout,isSSL
 		List<String> stringList = null;
 		jedis.auth(password);
 		jedis.connect();
 		if (jedis.isConnected()) {
 			stringList = jedis.lrange(key, 0, maxLength - 1);
 		} else {
-			if (LogSetting.LOG_REDIS) {			
+			if (LogSetting.LOG_REDIS) {
 				logger.info("getList connection error !!!!!");
 			}
 		}
 		jedis.close();
 
-		for (String s : stringList) {
-			logger.info("getList returns: " + s);
+		if (stringList != null) {
+			for (String s : stringList) {
+				logger.info("getList returns: " + s);
+			}
 		}
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_END) {
 			logger.info("getList End");
@@ -162,7 +177,8 @@ public class Redis {
 		return stringList;
 	}
 
-	static public void setList(String host, String password, String key, List<String> stringList) {
+	static public void setList(String host, String password, String key,
+			List<String> stringList) {
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("setList Begin");
 			logger.info("getList params: host= " + host + " key= " + key);
@@ -179,7 +195,8 @@ public class Redis {
 				}
 			}
 
-			Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port, timeout,isSSL
+			Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port,
+																// timeout,isSSL
 			jedis.auth(password);
 			jedis.connect();
 			if (jedis.isConnected()) {

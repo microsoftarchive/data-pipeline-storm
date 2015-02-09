@@ -24,8 +24,8 @@ Store Event Hub Messages to Microsoft Azure Blob with Trident
 
 NAME    | PERMISSIONS
 ----    | -----------
-Devices | Send
-Storm   | Listen
+devices | Send
+storm   | Listen
 
 ### Create the HDInsight Storm cluster
 - Sign in to the azure and create a storm cluster and create a Storm cluster
@@ -142,10 +142,9 @@ namespace SendEvents
 			static int numberOfDevices = 1000;
 			static string eventHubName = "[YourEventHubName]";
 			static string eventHubNamespace = "[YourServiceBusNamespaces]";
-			static string sharedAccessPolicyName = "devices";
-			static string sharedAccessPolicyKey = "[YoursharedAccessPolicyKey]";
-			static string eventHubConnectionStr = "Endpoint=sb://[eventHubNamespace].servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=[YourSharedAccessKey]";
-			static void Main(string[] args)
+			static string devicesSharedAccessPolicyName = "devices";
+			static string devicesSharedAccessPolicyKey = "[YourdevicesSharedAccessPolicyKey]";
+			static string rootManageSharedAccessKey = "YourRootManageSharedAccessKey";
 			...
     }
 }
