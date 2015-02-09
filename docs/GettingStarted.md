@@ -150,7 +150,7 @@ namespace SendEvents
 }
 ```
 
-## Test the topology with Event Hub
+## Test the topology
 
 ### Test the topology locally
 
@@ -176,20 +176,3 @@ bin\storm jar eventhub-blobwriter-1.0-SNAPSHOT.jar com.contoso.app.trident.BlobW
 ```
 bin\storm kill BlobWriterTopology  
 ```
-
-## Test the topology without Event Hub
-
-To compile and test the file on your development machine without using Event hub, use the following steps.
-- Open file javaBlobWriterTopoloty.java
-- Uncomment the line under method  buildTopology (String topologyName)
-
-``` java
-// TestSpout spout = new TestSpout();
-```
-- Comment the line
-
-``` java
-OpaqueTridentEventHubSpout spout = createOpaqueTridentEventHubSpout(topologyName);
-```
-
-- Run the topology either locally or in HDInsight Storm
