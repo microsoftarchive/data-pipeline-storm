@@ -28,7 +28,7 @@ public class BlobWriterTopology {
 		config.setNumWorkers(numWorkers);
 		config.setMaxTaskParallelism(numWorkers);
 		
-		StormTopology stormTopology = buildTopology(topologyName, numWorkers);
+		StormTopology stormTopology = buildTopology(topologyName);
 
 		if(isLocalCluster){
 			LocalCluster localCluster = new LocalCluster();
@@ -38,7 +38,7 @@ public class BlobWriterTopology {
 		}
 	}
 
-	static StormTopology buildTopology(String topologyName, int numWorkers) {
+	static StormTopology buildTopology(String topologyName) {
 		Redis.flushDB(Redis.getHost(), Redis.getPassword());
 		TridentTopology tridentTopology = new TridentTopology();
 		Stream inputStream = null;
@@ -47,6 +47,7 @@ public class BlobWriterTopology {
 		spoutConfig.setTopologyName(topologyName);
 		OpaqueTridentEventHubSpout spout = new OpaqueTridentEventHubSpout(spoutConfig);
 		inputStream = tridentTopology.newStream("message", spout);
+		int numWorkers = Integer.parseInt(ConfigProperties.getProperty("eventhubspout.partitions.count"));
 		inputStream.parallelismHint(numWorkers).partitionAggregate(new Fields("message"), new ByteAggregator(), new Fields("blobname"));
 		return tridentTopology.build();
 	}

@@ -13,10 +13,6 @@ public class BlockState {
 	public Block block;
 	public boolean needPersist = false;
 
-	private int maxNumberOfBlocks = 50000;
-	public String blobidBlockidStrFormat = null;
-	public String blobNameFormat = null;
-	public String blockIdStrFormat = null;
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(BlockState.class);
 	private String redisHost = null;
 	private String redisPassword = null;
@@ -26,7 +22,6 @@ public class BlockState {
 	private int partitionIndex;
 	private long txid;
 	private List<String> blocklist;
-	private int maxBlockBytes;
 	String partition_tx_logStr;
 
 	public BlockState(int partitionIndex, long txid) {
@@ -37,13 +32,7 @@ public class BlockState {
 
 		this.partitionIndex = partitionIndex;
 		this.txid = txid;
-		this.maxNumberOfBlocks = getMaxNumberOfblocks();
-		this.maxBlockBytes = getMaxBlockBytes();
 		
-		this.blobidBlockidStrFormat = ConfigProperties.getProperty("blobidBlockidStrFormat");
-		this.blobNameFormat = ConfigProperties.getProperty("blobNameFormat");
-		this.blockIdStrFormat = ConfigProperties.getProperty("blockIdStrFormat");
-
 		redisHost = Redis.getHost();
 		redisPassword = Redis.getPassword();
 		this.key_partition_txid = "p_" + String.valueOf(partitionIndex) + "_txid";
@@ -57,7 +46,7 @@ public class BlockState {
 			long lastTxid = Long.parseLong(lastTxidStr);
 			if (txid != lastTxid) { // a new batch, not a replay
 				Block lastblock = getLastBlockInLastFailedBatch();
-				this.block = lastblock.next();
+				this.block = next();
 			} else {// if(txid == lastTxid) a replay, overwrite old block
 				this.block = getFirstBlockInLastFailedBatch();
 			}
@@ -93,14 +82,44 @@ public class BlockState {
 		}
 
 		Block block = new Block();
-		block.build();
-
+		build(block);
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
 			logger.info(this.partition_tx_logStr + "getNewBlock End");
 		}
 		return block;
 	}
+	private void build(Block block)	{
+		String blobNameFormat = ConfigProperties.getProperty("blobNameFormat");
+		String blobname = String.format(blobNameFormat, this.partitionIndex, block.blobid);
 
+		String blobidBlockidStr = block.build(blobname);
+		this.blocklist.add(blobidBlockidStr);		
+	}
+	public Block next() {
+		Block current = this.block;
+		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
+			logger.info("Block.next Begin");
+		}
+
+		Block nextBlock = new Block();
+		int maxNumberOfBlocks = ConfigProperties.getMaxNumberOfblocks();
+		if (current.blockid < maxNumberOfBlocks) {
+			nextBlock.blobid = current.blobid;
+			nextBlock.blockid = current.blockid + 1;
+		} else {
+			nextBlock.blobid = current.blobid + 1;
+			nextBlock.blockid = 1;
+		}
+
+		build(nextBlock);
+
+		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
+			logger.info("Block.next returns blobid=" + nextBlock.blobid + ", blockid=" + nextBlock.blockid);
+			logger.info("Block.next End");
+		}
+
+		return nextBlock;
+	}
 	private Block getLastBlockInLastFailedBatch() {
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(this.partition_tx_logStr + "getLastBlockInLastFailedBatch Begin");
@@ -128,7 +147,8 @@ public class BlockState {
 				logger.info(this.partition_tx_logStr + "List(" + this.key_partitionBlocklist + ") is null or empty");
 			}
 		}
-		block.build();
+		
+		build(block);
 
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
 			logger.info(this.partition_tx_logStr + "getLastBlockInLastFailedBatch returns blobid=" + block.blobid + ", blockid=" + block.blockid);
@@ -161,165 +181,12 @@ public class BlockState {
 		} else {
 			logger.info(this.partition_tx_logStr + "List(" + this.key_partitionBlocklist + ") is null or empty");
 		}
-		block.build();
+		build(block);
 
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
 			logger.info(this.partition_tx_logStr + "getFirstBlockInLastFailedBatch returns blobid=" + block.blobid + ", blockid=" + block.blockid);
 			logger.info(this.partition_tx_logStr + "getFirstBlockInLastFailedBatch End");
 		}
 		return block;
-	}
-	private int getMaxNumberOfblocks() {
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
-			logger.info(this.partition_tx_logStr + "getMaxNumberOfblocks Begin");
-		}
-
-		int maxNumberOfBlocks = 50000;
-		String maxNumberOfBlocksStr = ConfigProperties.getProperty("storage.blob.block.number.max");
-		if (maxNumberOfBlocksStr != null) {
-			maxNumberOfBlocks = Integer.parseInt(maxNumberOfBlocksStr);
-		}
-
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
-			logger.info(this.partition_tx_logStr + "getMaxNumberOfblocks returns " + maxNumberOfBlocks);
-			logger.info(this.partition_tx_logStr + "getMaxNumberOfblocks End");
-		}
-
-		return maxNumberOfBlocks;
-	}
-	private int getMaxBlockBytes() {
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
-			logger.info(this.partition_tx_logStr + "getMaxBlockBytes Begin");
-		}
-
-		int maxBlockBytes = 1024;
-		String maxBlockBytesStr = ConfigProperties.getProperty("storage.blob.block.bytes.max");
-		if (maxBlockBytesStr != null) {
-			maxBlockBytes = Integer.parseInt(maxBlockBytesStr);
-		}
-
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
-			logger.info(this.partition_tx_logStr + "getMaxBlockBytes returns " + maxBlockBytes);
-			logger.info(this.partition_tx_logStr + "getMaxBlockBytes End");
-		}
-		return maxBlockBytes;
-	}
-
-	public class Block {
-		public int blobid = 1;
-		public int blockid = 1;
-		public String blobname;
-		public String blockidStr;
-		public String blockdata;
-
-		public Block() {
-			if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
-				logger.info(BlockState.this.partition_tx_logStr + "Block Constructor Begin");
-			}
-
-			this.blobid = 1;
-			this.blockid = 1;
-			this.blockdata = "";
-
-			if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
-				logger.info(BlockState.this.partition_tx_logStr + "Block Constructor End");
-			}
-		}
-
-		public void addData(String msg) {
-			if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_BEGIN) {
-				logger.info(BlockState.this.partition_tx_logStr + "Block.addData Begin");
-			}
-
-			this.blockdata = this.blockdata + msg;
-
-			if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_END) {
-				logger.info(BlockState.this.partition_tx_logStr + "Block.addData End");
-			}
-		}
-
-		public boolean isMessageSizeWithnLimit(String msg) {
-			if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_BEGIN) {
-				logger.info(BlockState.this.partition_tx_logStr + "Block.isMessageSizeWithnLimit Begin");
-			}
-
-			boolean result = false;
-			if (msg.getBytes().length <= maxBlockBytes) {
-				result = true;
-			}
-
-			if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_END) {
-				logger.info(BlockState.this.partition_tx_logStr + "Block.isMessageSizeWithnLimit End");
-			}
-			return result;
-		}
-
-		public boolean willMessageFitCurrentBlock(String msg) {
-			if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_BEGIN) {
-				logger.info(BlockState.this.partition_tx_logStr + "Block.willMessageFitCurrentBlock Begin");
-			}
-			boolean result = false;
-			int byteSize = (this.blockdata + msg).getBytes().length;
-			if (byteSize <= maxBlockBytes) {
-				result = true;
-			}
-			if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_END) {
-				logger.info(BlockState.this.partition_tx_logStr + "Block.willMessageFitCurrentBlock End");
-			}
-			return result;
-		}
-
-		public void upload() {
-			if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
-				logger.info(BlockState.this.partition_tx_logStr + "Block.upload Begin");
-			}
-
-			BlobWriter.upload(this.blobname, this.blockidStr, this.blockdata);
-
-			if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
-				logger.info(BlockState.this.partition_tx_logStr + "BlobState.upload End");
-			}
-		}
-
-		private void build() {
-			if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
-				logger.info(BlockState.this.partition_tx_logStr + "Block.build Begin");
-			}
-
-			this.blockdata = new String("");
-			this.blobname = String.format(BlockState.this.blobNameFormat, BlockState.this.partitionIndex, this.blobid);
-			this.blockidStr = String.format(BlockState.this.blockIdStrFormat, this.blockid);
-			String blobidBlockidStr = String.format(BlockState.this.blobidBlockidStrFormat, this.blobid, this.blockid);
-			BlockState.this.blocklist.add(blobidBlockidStr);
-
-			if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
-				logger.info(BlockState.this.partition_tx_logStr + "Block.build End");
-			}
-		}
-
-		public Block next() {
-			Block current = this;
-			if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
-				logger.info(BlockState.this.partition_tx_logStr + "Block.next Begin");
-			}
-
-			Block nextBlock = new Block();
-			if (current.blockid < maxNumberOfBlocks) {
-				nextBlock.blobid = current.blobid;
-				nextBlock.blockid = current.blockid + 1;
-			} else {
-				nextBlock.blobid = current.blobid + 1;
-				nextBlock.blockid = 1;
-			}
-			nextBlock.build();
-
-			if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
-				logger.info(BlockState.this.partition_tx_logStr + "Block.next returns blobid=" + nextBlock.blobid + ", blockid=" + nextBlock.blockid);
-				logger.info(BlockState.this.partition_tx_logStr + "Block.next End");
-			}
-
-			return nextBlock;
-		}
-
 	}
 }

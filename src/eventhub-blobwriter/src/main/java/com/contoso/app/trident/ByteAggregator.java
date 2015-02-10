@@ -82,7 +82,7 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 						logger.info(state.partition_tx_logStr + "Roll over from : blobname = " + state.block.blobname + ", blockid = " + state.block.blockid);
 					}
 
-					state.block = state.block.next();
+					state.block = state.next();
 
 					if (LogSetting.LOG_BLOCK_ROLL_OVER) {
 						logger.info(state.partition_tx_logStr + "Roll over to:    blobname = " + state.block.blobname + ", blockid = " + state.block.blockid);
