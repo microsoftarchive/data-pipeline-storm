@@ -3,6 +3,9 @@
 package com.contoso.app.trident;
 
 public final class LogSetting {
+	
+	//todo: move those constants to Config.properties
+	
 	public static final boolean LOG_MESSAGE = false;
 	
 	public static final boolean LOG_BATCH = true;
