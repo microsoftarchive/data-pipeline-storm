@@ -22,11 +22,9 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 
 	private long txid;
 	private int partitionIndex;
-	private Properties properties;
 
-	public ByteAggregator(Properties properties) {
+	public ByteAggregator() {
 		logger.info("Constructor Begin");
-		this.properties = properties;
 		logger.info("Constructor End");
 	}
 
@@ -54,7 +52,7 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 		if (batchId instanceof TransactionAttempt) {
 			this.txid = ((TransactionAttempt) batchId).getTransactionId();
 		}
-		BlockState state = new BlockState(this.partitionIndex, this.txid, this.properties);
+		BlockState state = new BlockState(this.partitionIndex, this.txid);
 		// BlobWriter.remove(this.properties, state.blockIdStrFormat, state.block.blobname, state.block.blockidStr);
 
 		if (LogSetting.LOG_BATCH && LogSetting.LOG_METHOD_END) {
@@ -77,7 +75,7 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 				} else {
 					// since the new msg will not fit into the current block, we will upload the current block,
 					// and then get the next block, and add the new msg to the next block
-					state.block.upload(this.properties);
+					state.block.upload();
 					state.needPersist = true;
 
 					if (LogSetting.LOG_BLOCK_ROLL_OVER) {
@@ -108,7 +106,7 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 		}
 
 		if (state.block.blockdata.length() > 0) {
-			state.block.upload(this.properties); // upload the last block in the batch
+			state.block.upload(); // upload the last block in the batch
 			state.needPersist = true;
 		}
 

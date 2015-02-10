@@ -2,7 +2,7 @@
 
 package com.contoso.app.trident;
 
-public class LogSetting {
+public final class LogSetting {
 	public static final boolean LOG_MESSAGE = false;
 	
 	public static final boolean LOG_BATCH = true;

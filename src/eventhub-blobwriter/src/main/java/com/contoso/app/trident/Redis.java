@@ -42,24 +42,24 @@ public class Redis {
 		}
 	}
 
-	static public String getHost(Properties properties) {
+	static public String getHost() {
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("getHost Begin");
 		}
 
-		String redisHost = properties.getProperty("redis.host");
+		String redisHost = ConfigProperties.getProperty("redis.host");
 
 		logger.info("getHost Returns " + redisHost);
 		logger.info("getHost End");
 		return redisHost;
 	}
 
-	static public String getPassword(Properties properties) {
+	static public String getPassword() {
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("getPassword Begin");
 		}
 
-		String redisPassword = properties.getProperty("redis.password");
+		String redisPassword = ConfigProperties.getProperty("redis.password");
 
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_END) {
 			logger.info("getPassword End");

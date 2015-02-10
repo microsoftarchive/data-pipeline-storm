@@ -13,10 +13,10 @@ public class BlockState {
 	public Block block;
 	public boolean needPersist = false;
 
-	private int maxNumberOfBlocks = 6;
-	private static final String blobidBlockidStrFormat = "%05d_%05d";
-	private static final String blobNameFormat = "aaa/blobwriter/%05d/%05d";
-	public String blockIdStrFormat = "%05d";
+	private int maxNumberOfBlocks = 50000;
+	public String blobidBlockidStrFormat = null;
+	public String blobNameFormat = null;
+	public String blockIdStrFormat = null;
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(BlockState.class);
 	private String redisHost = null;
 	private String redisPassword = null;
@@ -26,10 +26,10 @@ public class BlockState {
 	private int partitionIndex;
 	private long txid;
 	private List<String> blocklist;
-	private int maxBlockBytes;// 1024 * 1024 * 4 / 16;
+	private int maxBlockBytes;
 	String partition_tx_logStr;
 
-	public BlockState(int partitionIndex, long txid, Properties properties) {
+	public BlockState(int partitionIndex, long txid) {
 		this.partition_tx_logStr = "p" + partitionIndex + "_tx" + txid + ": ";
 		if ((LogSetting.LOG_INSTANCE || LogSetting.LOG_BLOCK) && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(partition_tx_logStr + "Constructor Begin");
@@ -37,11 +37,15 @@ public class BlockState {
 
 		this.partitionIndex = partitionIndex;
 		this.txid = txid;
-		this.maxNumberOfBlocks = getMaxNumberOfblocks(properties);
-		this.maxBlockBytes = getMaxBlockBytes(properties);
+		this.maxNumberOfBlocks = getMaxNumberOfblocks();
+		this.maxBlockBytes = getMaxBlockBytes();
+		
+		this.blobidBlockidStrFormat = ConfigProperties.getProperty("blobidBlockidStrFormat");
+		this.blobNameFormat = ConfigProperties.getProperty("blobNameFormat");
+		this.blockIdStrFormat = ConfigProperties.getProperty("blockIdStrFormat");
 
-		redisHost = Redis.getHost(properties);
-		redisPassword = Redis.getPassword(properties);
+		redisHost = Redis.getHost();
+		redisPassword = Redis.getPassword();
 		this.key_partition_txid = "p_" + String.valueOf(partitionIndex) + "_txid";
 		this.key_partitionBlocklist = "p_" + String.valueOf(partitionIndex) + "_blocklist";
 		this.blocklist = new ArrayList<String>();
@@ -165,13 +169,13 @@ public class BlockState {
 		}
 		return block;
 	}
-	private int getMaxNumberOfblocks(Properties properties) {
+	private int getMaxNumberOfblocks() {
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(this.partition_tx_logStr + "getMaxNumberOfblocks Begin");
 		}
 
-		int maxNumberOfBlocks = 10;
-		String maxNumberOfBlocksStr = properties.getProperty("storage.blob.block.number.max");
+		int maxNumberOfBlocks = 50000;
+		String maxNumberOfBlocksStr = ConfigProperties.getProperty("storage.blob.block.number.max");
 		if (maxNumberOfBlocksStr != null) {
 			maxNumberOfBlocks = Integer.parseInt(maxNumberOfBlocksStr);
 		}
@@ -183,13 +187,13 @@ public class BlockState {
 
 		return maxNumberOfBlocks;
 	}
-	private int getMaxBlockBytes(Properties properties) {
+	private int getMaxBlockBytes() {
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(this.partition_tx_logStr + "getMaxBlockBytes Begin");
 		}
 
 		int maxBlockBytes = 1024;
-		String maxBlockBytesStr = properties.getProperty("storage.blob.block.bytes.max");
+		String maxBlockBytesStr = ConfigProperties.getProperty("storage.blob.block.bytes.max");
 		if (maxBlockBytesStr != null) {
 			maxBlockBytes = Integer.parseInt(maxBlockBytesStr);
 		}
@@ -265,12 +269,12 @@ public class BlockState {
 			return result;
 		}
 
-		public void upload(Properties properties) {
+		public void upload() {
 			if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
 				logger.info(BlockState.this.partition_tx_logStr + "Block.upload Begin");
 			}
 
-			BlobWriter.upload(properties, this.blobname, this.blockidStr, this.blockdata);
+			BlobWriter.upload(this.blobname, this.blockidStr, this.blockdata);
 
 			if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
 				logger.info(BlockState.this.partition_tx_logStr + "BlobState.upload End");
@@ -283,9 +287,9 @@ public class BlockState {
 			}
 
 			this.blockdata = new String("");
-			this.blobname = String.format(BlockState.blobNameFormat, BlockState.this.partitionIndex, this.blobid);
+			this.blobname = String.format(BlockState.this.blobNameFormat, BlockState.this.partitionIndex, this.blobid);
 			this.blockidStr = String.format(BlockState.this.blockIdStrFormat, this.blockid);
-			String blobidBlockidStr = String.format(BlockState.blobidBlockidStrFormat, this.blobid, this.blockid);
+			String blobidBlockidStr = String.format(BlockState.this.blobidBlockidStrFormat, this.blobid, this.blockid);
 			BlockState.this.blocklist.add(blobidBlockidStr);
 
 			if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {

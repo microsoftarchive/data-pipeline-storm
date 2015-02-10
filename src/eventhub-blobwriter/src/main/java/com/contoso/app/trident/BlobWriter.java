@@ -25,7 +25,7 @@ import com.microsoft.azure.storage.core.Base64;
 
 @SuppressWarnings("unused")
 public class BlobWriter {
-	static public void upload(Properties properties, String blobname, String blockIdStr, String data) {
+	static public void upload(String blobname, String blockIdStr, String data) {
 		Logger logger = (Logger) LoggerFactory.getLogger(BlobWriter.class);
 		InputStream stream = null;
 		try {
@@ -33,9 +33,9 @@ public class BlobWriter {
 				logger.info("upload Begin");
 			}
 
-			String accountName = properties.getProperty("storage.blob.account.name");
-			String accountKey = properties.getProperty("storage.blob.account.key");
-			String containerName = properties.getProperty("storage.blob.account.container");
+			String accountName = ConfigProperties.getProperty("storage.blob.account.name");
+			String accountKey = ConfigProperties.getProperty("storage.blob.account.key");
+			String containerName = ConfigProperties.getProperty("storage.blob.account.container");
 			String connectionStrFormatter = "DefaultEndpointsProtocol=http;AccountName=%s;AccountKey=%s";
 			String connectionStr = String.format(connectionStrFormatter, accountName, accountKey);
 
@@ -112,7 +112,7 @@ public class BlobWriter {
 		}
 	}
 
-	static public void remove(Properties properties, String blockIdStrFormat, String blobname, String blockIdStr) {
+	static public void remove(String blockIdStrFormat, String blobname, String blockIdStr) {
 		// remove blocks with blockid >= blockIdStr
 		Logger logger = (Logger) LoggerFactory.getLogger(BlobWriter.class);
 		try {
@@ -120,9 +120,9 @@ public class BlobWriter {
 				logger.info("remove Begin");
 			}
 
-			String accountName = properties.getProperty("storage.blob.account.name");
-			String accountKey = properties.getProperty("storage.blob.account.key");
-			String containerName = properties.getProperty("storage.blob.account.container");
+			String accountName = ConfigProperties.getProperty("storage.blob.account.name");
+			String accountKey = ConfigProperties.getProperty("storage.blob.account.key");
+			String containerName = ConfigProperties.getProperty("storage.blob.account.container");
 
 			String connectionStrFormatter = "DefaultEndpointsProtocol=http;AccountName=%s;AccountKey=%s";
 			String connectionStr = String.format(connectionStrFormatter, accountName, accountKey);
