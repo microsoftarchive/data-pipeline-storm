@@ -18,23 +18,26 @@ public class BlobWriterTopology {
 		boolean isLocalCluster = true;
 		String topologyName = "localTopology";
 
-		if ((args != null) && (args.length > 0)) { // if running in storm cluster, the first argument is the topology name
+		if ((args != null) && (args.length > 0)) { // if running in storm
+													// cluster, the first
+													// argument is the topology
+													// name
 			topologyName = args[0];
 			isLocalCluster = false;
 		}
-		
+
 		int numWorkers = Integer.parseInt(ConfigProperties.getProperty("eventhubspout.partitions.count"));
 		Config config = new Config();
 		config.setNumWorkers(numWorkers);
 		config.setMaxTaskParallelism(numWorkers);
-		
+
 		StormTopology stormTopology = buildTopology(topologyName);
 
-		if(isLocalCluster){
+		if (isLocalCluster) {
 			LocalCluster localCluster = new LocalCluster();
 			localCluster.submitTopology(topologyName, config, stormTopology);
-		}else{
-			StormSubmitter.submitTopology(topologyName, config, stormTopology);			
+		} else {
+			StormSubmitter.submitTopology(topologyName, config, stormTopology);
 		}
 	}
 
@@ -51,7 +54,6 @@ public class BlobWriterTopology {
 		inputStream.parallelismHint(numWorkers).partitionAggregate(new Fields("message"), new ByteAggregator(), new Fields("blobname"));
 		return tridentTopology.build();
 	}
-
 
 	static EventHubSpoutConfig readConfig() {
 		EventHubSpoutConfig spoutConfig;

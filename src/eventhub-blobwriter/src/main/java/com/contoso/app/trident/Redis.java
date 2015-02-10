@@ -15,39 +15,12 @@ import redis.clients.jedis.Jedis;
 public class Redis {
 	static String host;
 	static String password;
-	
-	static{
+
+	static {
 		host = ConfigProperties.getProperty("redis.host");
 		password = ConfigProperties.getProperty("redis.password");
 	}
-	private static final Logger logger = (Logger) LoggerFactory
-			.getLogger(Redis.class);
-
-	public static void main(String[] args) {
-		testList();
-	}
-
-	public static void testList() {
-		String host = "hanzredis1.redis.cache.windows.net";
-		String password = "eQoMISLEQf7mwCDetcvIUT+P9WGGK9KGsdf7/UOGkTg=";
-		List<String> li = new ArrayList<String>();
-		li.add("1");
-		li.add("2");
-		li.add("3");
-		li.add("4");
-		Redis.setList("key", li);
-		List<String> li1 = new ArrayList<String>();
-		li1.add("1a");
-		li1.add("2a");
-		li1.add("3a");
-		li1.add("4a");
-		Redis.setList("key", li1);
-
-		List<String> li2 = Redis.getList("key", 50000);
-		for (String s : li2) {
-			System.out.println(s);
-		}
-	}
+	private static final Logger logger = (Logger) LoggerFactory.getLogger(Redis.class);
 
 	static public void flushDB() {
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_BEGIN) {
@@ -100,12 +73,10 @@ public class Redis {
 		return value;
 	}
 
-	static public void set(String key,
-			String value) {
+	static public void set(String key, String value) {
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("set Begin");
-			logger.info("set params: host= " + host + " key= " + key
-					+ " value= " + value);
+			logger.info("set params: host= " + host + " key= " + key + " value= " + value);
 		}
 
 		Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port,
@@ -157,8 +128,7 @@ public class Redis {
 		return stringList;
 	}
 
-	static public void setList(String key,
-			List<String> stringList) {
+	static public void setList(String key, List<String> stringList) {
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("setList Begin");
 			logger.info("getList params: host= " + host + " key= " + key);

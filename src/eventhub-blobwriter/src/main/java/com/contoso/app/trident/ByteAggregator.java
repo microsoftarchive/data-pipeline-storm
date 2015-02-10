@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
 
 package com.contoso.app.trident;
+
 import java.util.Map;
 import java.util.Properties;
 
@@ -14,6 +15,7 @@ import storm.trident.operation.TridentCollector;
 import storm.trident.operation.TridentOperationContext;
 import storm.trident.topology.TransactionAttempt;
 import storm.trident.tuple.TridentTuple;
+
 @SuppressWarnings("unused")
 public class ByteAggregator extends BaseAggregator<BlockList> {
 
@@ -53,7 +55,8 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 			this.txid = ((TransactionAttempt) batchId).getTransactionId();
 		}
 		BlockList blockList = new BlockList(this.partitionIndex, this.txid);
-		// BlobWriter.remove(state.blockIdStrFormat, state.block.blobname, state.block.blockidStr);
+		// BlobWriter.remove(state.blockIdStrFormat, state.block.blobname,
+		// state.block.blockidStr);
 
 		if (LogSetting.LOG_BATCH && LogSetting.LOG_METHOD_END) {
 			logger.info(blockList.partitionTxidLogStr + "init End");
@@ -73,25 +76,29 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 				if (blockList.currentBlock.willMessageFitCurrentBlock(msg)) {
 					blockList.currentBlock.addData(msg);
 				} else {
-					// since the new msg will not fit into the current block, we will upload the current block,
-					// and then get the next block, and add the new msg to the next block
+					// since the new msg will not fit into the current block, we
+					// will upload the current block,
+					// and then get the next block, and add the new msg to the
+					// next block
 					blockList.currentBlock.upload();
 					blockList.needPersist = true;
 
 					if (LogSetting.LOG_BLOCK_ROLL_OVER) {
-						logger.info(blockList.partitionTxidLogStr + "Roll over from : blobname = " + blockList.currentBlock.blobname + ", blockid = " + blockList.currentBlock.blockid);
+						logger.info(blockList.partitionTxidLogStr + "Roll over from : blobname = " + blockList.currentBlock.blobname + ", blockid = "
+								+ blockList.currentBlock.blockid);
 					}
 
 					blockList.currentBlock = blockList.getNextBlock(blockList.currentBlock);
 
 					if (LogSetting.LOG_BLOCK_ROLL_OVER) {
-						logger.info(blockList.partitionTxidLogStr + "Roll over to:    blobname = " + blockList.currentBlock.blobname + ", blockid = " + blockList.currentBlock.blockid);
+						logger.info(blockList.partitionTxidLogStr + "Roll over to:    blobname = " + blockList.currentBlock.blobname + ", blockid = "
+								+ blockList.currentBlock.blockid);
 					}
 
 					blockList.currentBlock.addData(msg);
 				}
 			} else {
-				// message size is not within the limit, skip the message 
+				// message size is not within the limit, skip the message
 				logger.info(blockList.partitionTxidLogStr + "message skiped: message size exceeds the size limit, message= " + tupleStr);
 			}
 		}
@@ -100,13 +107,15 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 			logger.info(blockList.partitionTxidLogStr + "aggregate End");
 		}
 	}
+
 	public void complete(BlockList blockList, TridentCollector collector) {
 		if (LogSetting.LOG_BATCH && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(blockList.partitionTxidLogStr + "complete Begin");
 		}
 
 		if (blockList.currentBlock.blockdata.length() > 0) {
-			blockList.currentBlock.upload(); // upload the last block in the batch
+			blockList.currentBlock.upload(); // upload the last block in the
+												// batch
 			blockList.needPersist = true;
 		}
 

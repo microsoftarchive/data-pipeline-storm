@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
 
 package com.contoso.app.trident;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -12,11 +13,12 @@ import org.slf4j.LoggerFactory;
 public class BlockList {
 	public Block currentBlock;
 	public boolean needPersist = false;
-	public String partitionTxidLogStr;	
+	public String partitionTxidLogStr;
 	private String partitionTxidKeyStr;
 	private String partitionBlocklistKeyStr;
 
-	private List<String> blockList;	// blockList stores a list of block id string
+	private List<String> blockList; // blockList stores a list of block id
+									// string
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(BlockList.class);
 	private int partitionIndex;
 	private long txid;
@@ -31,20 +33,22 @@ public class BlockList {
 
 		this.blockList = new ArrayList<String>();
 		this.partitionIndex = partitionIndex;
-		this.txid = txid;	
+		this.txid = txid;
 
 		String partitionTxidKeyStrFormat = ConfigProperties.getProperty("partitionTxidKeyStrFormat");
 		this.partitionTxidKeyStr = String.format(partitionTxidKeyStrFormat, partitionIndex);
-		
+
 		String partitionBlocklistKeyStrFormat = ConfigProperties.getProperty("partitionBlocklistKeyStrFormat");
 		this.partitionBlocklistKeyStr = String.format(partitionBlocklistKeyStrFormat, partitionIndex);
 
 		String lastTxidStr = Redis.get(this.partitionTxidKeyStr);
-		if (lastTxidStr == null) { // the very first time the topology is running
+		if (lastTxidStr == null) { // the very first time the topology is
+									// running
 			this.currentBlock = getNewBlock();
 		} else {
 			long lastTxid = Long.parseLong(lastTxidStr);
-			if (txid != lastTxid) { // a new batch, not a replay, last batch is successful
+			if (txid != lastTxid) { // a new batch, not a replay, last batch is
+									// successful
 				this.currentBlock = getNextBlockAfterLastSuccessBatch();
 			} else {// if(txid == lastTxid), a replay, overwrite old block
 				this.currentBlock = getFirstBlockInLastFailedBatch();
@@ -56,6 +60,7 @@ public class BlockList {
 			logger.info(this.partitionTxidLogStr + "Constructor End");
 		}
 	}
+
 	private Block getNewBlock() {
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(this.partitionTxidLogStr + "getNewBlock Begin");
@@ -66,13 +71,14 @@ public class BlockList {
 		String blobname = String.format(blobNameFormat, this.partitionIndex, block.blobid);
 
 		String blobidAndBlockidStr = block.build(blobname);
-		this.blockList.add(blobidAndBlockidStr);		
+		this.blockList.add(blobidAndBlockidStr);
 
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
 			logger.info(this.partitionTxidLogStr + "getNewBlock End");
 		}
 		return block;
 	}
+
 	public Block getNextBlock(Block current) {
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("getNextBlock Begin");
@@ -92,8 +98,7 @@ public class BlockList {
 		String blobname = String.format(blobNameFormat, this.partitionIndex, block.blobid);
 
 		String blobidAndBlockidStr = block.build(blobname);
-		this.blockList.add(blobidAndBlockidStr);		
-
+		this.blockList.add(blobidAndBlockidStr);
 
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
 			logger.info("getNextBlock returns blobid=" + block.blobid + ", blockid=" + block.blockid);
@@ -102,6 +107,7 @@ public class BlockList {
 
 		return block;
 	}
+
 	private Block getNextBlockAfterLastSuccessBatch() {
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(this.partitionTxidLogStr + "getNextBlockAfterLastSuccessBatch Begin");
@@ -112,7 +118,8 @@ public class BlockList {
 		if (lastBlobidBlockidList != null && lastBlobidBlockidList.size() > 0) {
 			String blockStr = lastBlobidBlockidList.get(0);
 			for (String s : lastBlobidBlockidList) {
-				if (s.compareTo(blockStr) > 0) {// find the last block written in the last batch
+				if (s.compareTo(blockStr) > 0) {// find the last block written
+												// in the last batch
 					blockStr = s;
 				}
 			}
@@ -129,7 +136,7 @@ public class BlockList {
 				logger.info(this.partitionTxidLogStr + "List(" + this.partitionBlocklistKeyStr + ") is null or empty");
 			}
 		}
-		
+
 		String blobNameFormat = ConfigProperties.getProperty("blobNameFormat");
 		String blobname = String.format(blobNameFormat, this.partitionIndex, block.blobid);
 		String blobidAndBlockidStr = block.build(blobname);
@@ -141,6 +148,7 @@ public class BlockList {
 		}
 		return block;
 	}
+
 	private Block getFirstBlockInLastFailedBatch() {
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(this.partitionTxidLogStr + "getFirstBlockInLastFailedBatch Begin");
@@ -151,7 +159,8 @@ public class BlockList {
 		if (lastblocks != null && lastblocks.size() > 0) {
 			String blockStr = lastblocks.get(0);
 			for (String s : lastblocks) {
-				if (s.compareTo(blockStr) < 0) {// find the first block written in the last batch
+				if (s.compareTo(blockStr) < 0) {// find the first block written
+												// in the last batch
 					blockStr = s;
 				}
 			}
@@ -169,7 +178,7 @@ public class BlockList {
 		String blobNameFormat = ConfigProperties.getProperty("blobNameFormat");
 		String blobname = String.format(blobNameFormat, this.partitionIndex, block.blobid);
 		String blobidAndBlockidStr = block.build(blobname);
-		this.blockList.add(blobidAndBlockidStr);		
+		this.blockList.add(blobidAndBlockidStr);
 
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
 			logger.info(this.partitionTxidLogStr + "getFirstBlockInLastFailedBatch returns blobid=" + block.blobid + ", blockid=" + block.blockid);

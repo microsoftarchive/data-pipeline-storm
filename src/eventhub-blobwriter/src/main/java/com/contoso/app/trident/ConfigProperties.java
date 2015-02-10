@@ -11,8 +11,7 @@ public final class ConfigProperties {
 	private static final Properties properties = new Properties();
 	static {
 		try {
-			properties.load(ConfigProperties.class.getClassLoader().getResourceAsStream(
-					"Config.properties"));
+			properties.load(ConfigProperties.class.getClassLoader().getResourceAsStream("Config.properties"));
 		} catch (IOException e) {
 			throw new ExceptionInInitializerError(e);
 		}
@@ -21,7 +20,7 @@ public final class ConfigProperties {
 	public static String getProperty(String key) {
 		return properties.getProperty(key);
 	}
-	
+
 	public static int getMaxNumberOfblocks() {
 		if (LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("getMaxNumberOfblocks Begin");
@@ -40,6 +39,7 @@ public final class ConfigProperties {
 
 		return maxNumberOfBlocks;
 	}
+
 	public static int getMaxBlockBytes() {
 		if (LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("getMaxBlockBytes Begin");
@@ -57,6 +57,5 @@ public final class ConfigProperties {
 		}
 		return maxBlockBytes;
 	}
-
 
 }
