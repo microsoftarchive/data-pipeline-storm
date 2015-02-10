@@ -39,7 +39,7 @@ public class BlobWriterTopology {
 	}
 
 	static StormTopology buildTopology(String topologyName) {
-		Redis.flushDB(Redis.getHost(), Redis.getPassword());
+		Redis.flushDB();
 		TridentTopology tridentTopology = new TridentTopology();
 		Stream inputStream = null;
 

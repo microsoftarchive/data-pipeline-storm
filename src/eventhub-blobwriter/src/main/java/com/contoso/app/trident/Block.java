@@ -90,17 +90,15 @@ public class Block {
 
 		this.blockdata = new String("");
 		this.blobname = blobname;
-		//this.blobname = String.format(blobNameFormat, BlockState.this.partitionIndex, this.blobid);
 
 		String blockIdStrFormat = ConfigProperties.getProperty("blockIdStrFormat");
 		this.blockidStr = String.format(blockIdStrFormat, this.blockid);
 		String blobidBlockidStrFormat = ConfigProperties.getProperty("blobidBlockidStrFormat");
-		String blobidBlockidStr = String.format(blobidBlockidStrFormat, this.blobid, this.blockid);
-		//BlockState.this.blocklist.add(blobidBlockidStr);
+		String blobidAndBlockidStr = String.format(blobidBlockidStrFormat, this.blobid, this.blockid);
 
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
 			logger.info("Block.build End");
 		}
-		return blobidBlockidStr;
+		return blobidAndBlockidStr;
 	}
 }

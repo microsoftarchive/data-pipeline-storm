@@ -15,7 +15,7 @@ import storm.trident.operation.TridentOperationContext;
 import storm.trident.topology.TransactionAttempt;
 import storm.trident.tuple.TridentTuple;
 @SuppressWarnings("unused")
-public class ByteAggregator extends BaseAggregator<BlockState> {
+public class ByteAggregator extends BaseAggregator<BlockList> {
 
 	private static final long serialVersionUID = 1L;
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(ByteAggregator.class);
@@ -44,7 +44,7 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 		}
 	}
 
-	public BlockState init(Object batchId, TridentCollector collector) {
+	public BlockList init(Object batchId, TridentCollector collector) {
 		if (LogSetting.LOG_BATCH && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("p" + this.partitionIndex + ": init End");
 		}
@@ -52,71 +52,71 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 		if (batchId instanceof TransactionAttempt) {
 			this.txid = ((TransactionAttempt) batchId).getTransactionId();
 		}
-		BlockState state = new BlockState(this.partitionIndex, this.txid);
-		// BlobWriter.remove(this.properties, state.blockIdStrFormat, state.block.blobname, state.block.blockidStr);
+		BlockList blockList = new BlockList(this.partitionIndex, this.txid);
+		// BlobWriter.remove(state.blockIdStrFormat, state.block.blobname, state.block.blockidStr);
 
 		if (LogSetting.LOG_BATCH && LogSetting.LOG_METHOD_END) {
-			logger.info(state.partition_tx_logStr + "init End");
+			logger.info(blockList.partition_tx_logStr + "init End");
 		}
-		return state;
+		return blockList;
 	}
 
-	public void aggregate(BlockState state, TridentTuple tuple, TridentCollector collector) {
+	public void aggregate(BlockList blockList, TridentTuple tuple, TridentCollector collector) {
 		if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_BEGIN) {
-			logger.info(state.partition_tx_logStr + "aggregate Begin");
+			logger.info(blockList.partition_tx_logStr + "aggregate Begin");
 		}
 
 		String tupleStr = tuple.getString(0);
 		if (tupleStr != null && tupleStr.length() > 0) {
 			String msg = tupleStr + "\r\n";
-			if (state.block.isMessageSizeWithnLimit(msg)) {
-				if (state.block.willMessageFitCurrentBlock(msg)) {
-					state.block.addData(msg);
+			if (blockList.currentBlock.isMessageSizeWithnLimit(msg)) {
+				if (blockList.currentBlock.willMessageFitCurrentBlock(msg)) {
+					blockList.currentBlock.addData(msg);
 				} else {
 					// since the new msg will not fit into the current block, we will upload the current block,
 					// and then get the next block, and add the new msg to the next block
-					state.block.upload();
-					state.needPersist = true;
+					blockList.currentBlock.upload();
+					blockList.needPersist = true;
 
 					if (LogSetting.LOG_BLOCK_ROLL_OVER) {
-						logger.info(state.partition_tx_logStr + "Roll over from : blobname = " + state.block.blobname + ", blockid = " + state.block.blockid);
+						logger.info(blockList.partition_tx_logStr + "Roll over from : blobname = " + blockList.currentBlock.blobname + ", blockid = " + blockList.currentBlock.blockid);
 					}
 
-					state.block = state.next();
+					blockList.currentBlock = blockList.getNextBlock(blockList.currentBlock);
 
 					if (LogSetting.LOG_BLOCK_ROLL_OVER) {
-						logger.info(state.partition_tx_logStr + "Roll over to:    blobname = " + state.block.blobname + ", blockid = " + state.block.blockid);
+						logger.info(blockList.partition_tx_logStr + "Roll over to:    blobname = " + blockList.currentBlock.blobname + ", blockid = " + blockList.currentBlock.blockid);
 					}
 
-					state.block.addData(msg);
+					blockList.currentBlock.addData(msg);
 				}
 			} else {
 				// message size is not within the limit, skip the message 
-				logger.info(state.partition_tx_logStr + "message skiped: message size exceeds the size limit, message= " + tupleStr);
+				logger.info(blockList.partition_tx_logStr + "message skiped: message size exceeds the size limit, message= " + tupleStr);
 			}
 		}
 
 		if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_END) {
-			logger.info(state.partition_tx_logStr + "aggregate End");
+			logger.info(blockList.partition_tx_logStr + "aggregate End");
 		}
 	}
-	public void complete(BlockState state, TridentCollector collector) {
+	public void complete(BlockList blockList, TridentCollector collector) {
 		if (LogSetting.LOG_BATCH && LogSetting.LOG_METHOD_BEGIN) {
-			logger.info(state.partition_tx_logStr + "complete Begin");
+			logger.info(blockList.partition_tx_logStr + "complete Begin");
 		}
 
-		if (state.block.blockdata.length() > 0) {
-			state.block.upload(); // upload the last block in the batch
-			state.needPersist = true;
+		if (blockList.currentBlock.blockdata.length() > 0) {
+			blockList.currentBlock.upload(); // upload the last block in the batch
+			blockList.needPersist = true;
 		}
 
-		if (state.needPersist) {
-			state.persist();
+		if (blockList.needPersist) {
+			blockList.persistState();
 		}
 		collector.emit(new Values(1)); // just emit a value
 
 		if (LogSetting.LOG_BATCH && LogSetting.LOG_METHOD_END) {
-			logger.info(state.partition_tx_logStr + "complete End");
+			logger.info(blockList.partition_tx_logStr + "complete End");
 		}
 	}
 }
