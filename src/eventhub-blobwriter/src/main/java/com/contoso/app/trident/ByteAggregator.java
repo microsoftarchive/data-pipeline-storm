@@ -56,14 +56,14 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 		// BlobWriter.remove(state.blockIdStrFormat, state.block.blobname, state.block.blockidStr);
 
 		if (LogSetting.LOG_BATCH && LogSetting.LOG_METHOD_END) {
-			logger.info(blockList.partition_tx_logStr + "init End");
+			logger.info(blockList.partitionTxidLogStr + "init End");
 		}
 		return blockList;
 	}
 
 	public void aggregate(BlockList blockList, TridentTuple tuple, TridentCollector collector) {
 		if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_BEGIN) {
-			logger.info(blockList.partition_tx_logStr + "aggregate Begin");
+			logger.info(blockList.partitionTxidLogStr + "aggregate Begin");
 		}
 
 		String tupleStr = tuple.getString(0);
@@ -79,30 +79,30 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 					blockList.needPersist = true;
 
 					if (LogSetting.LOG_BLOCK_ROLL_OVER) {
-						logger.info(blockList.partition_tx_logStr + "Roll over from : blobname = " + blockList.currentBlock.blobname + ", blockid = " + blockList.currentBlock.blockid);
+						logger.info(blockList.partitionTxidLogStr + "Roll over from : blobname = " + blockList.currentBlock.blobname + ", blockid = " + blockList.currentBlock.blockid);
 					}
 
 					blockList.currentBlock = blockList.getNextBlock(blockList.currentBlock);
 
 					if (LogSetting.LOG_BLOCK_ROLL_OVER) {
-						logger.info(blockList.partition_tx_logStr + "Roll over to:    blobname = " + blockList.currentBlock.blobname + ", blockid = " + blockList.currentBlock.blockid);
+						logger.info(blockList.partitionTxidLogStr + "Roll over to:    blobname = " + blockList.currentBlock.blobname + ", blockid = " + blockList.currentBlock.blockid);
 					}
 
 					blockList.currentBlock.addData(msg);
 				}
 			} else {
 				// message size is not within the limit, skip the message 
-				logger.info(blockList.partition_tx_logStr + "message skiped: message size exceeds the size limit, message= " + tupleStr);
+				logger.info(blockList.partitionTxidLogStr + "message skiped: message size exceeds the size limit, message= " + tupleStr);
 			}
 		}
 
 		if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_END) {
-			logger.info(blockList.partition_tx_logStr + "aggregate End");
+			logger.info(blockList.partitionTxidLogStr + "aggregate End");
 		}
 	}
 	public void complete(BlockList blockList, TridentCollector collector) {
 		if (LogSetting.LOG_BATCH && LogSetting.LOG_METHOD_BEGIN) {
-			logger.info(blockList.partition_tx_logStr + "complete Begin");
+			logger.info(blockList.partitionTxidLogStr + "complete Begin");
 		}
 
 		if (blockList.currentBlock.blockdata.length() > 0) {
@@ -116,7 +116,7 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 		collector.emit(new Values(1)); // just emit a value
 
 		if (LogSetting.LOG_BATCH && LogSetting.LOG_METHOD_END) {
-			logger.info(blockList.partition_tx_logStr + "complete End");
+			logger.info(blockList.partitionTxidLogStr + "complete End");
 		}
 	}
 }

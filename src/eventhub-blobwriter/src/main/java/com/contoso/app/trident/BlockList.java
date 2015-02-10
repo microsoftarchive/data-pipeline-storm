@@ -12,27 +12,28 @@ import org.slf4j.LoggerFactory;
 public class BlockList {
 	public Block currentBlock;
 	public boolean needPersist = false;
-	public String partition_tx_logStr;
+	public String partitionTxidLogStr;	
+	private String partitionTxidKeyStr;
 
 	private List<String> blockList;	// blockList stores a list of block id string
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(BlockList.class);
-	private String key_partition_txid;
 	private String key_partitionBlocklist;
 	private int partitionIndex;
 	private long txid;
 
 	public BlockList(int partitionIndex, long txid) {
-		this.partition_tx_logStr = "p" + partitionIndex + "_tx" + txid + ": ";
+		String partitionTxidLogStrFormat = ConfigProperties.getProperty("partitionTxidLogStrFormat");
+		this.partitionTxidLogStr = String.format(partitionTxidLogStrFormat, partitionIndex, txid);
 		if ((LogSetting.LOG_INSTANCE || LogSetting.LOG_BLOCK) && LogSetting.LOG_METHOD_BEGIN) {
-			logger.info(partition_tx_logStr + "Constructor Begin");
+			logger.info(partitionTxidLogStr + "Constructor Begin");
 		}
 
 		this.blockList = new ArrayList<String>();
-		this.key_partition_txid = "p_" + String.valueOf(partitionIndex) + "_txid";
+		this.partitionTxidKeyStr = "p_" + String.valueOf(partitionIndex) + "_txid";
 		this.key_partitionBlocklist = "p_" + String.valueOf(partitionIndex) + "_blocklist";
 		this.partitionIndex = partitionIndex;
 		this.txid = txid;	
-		String lastTxidStr = Redis.get(this.key_partition_txid);
+		String lastTxidStr = Redis.get(this.partitionTxidKeyStr);
 		if (lastTxidStr == null) { // the very first time the topology is running
 			this.currentBlock = getNewBlock();
 		} else {
@@ -45,13 +46,13 @@ public class BlockList {
 		}
 
 		if ((LogSetting.LOG_INSTANCE || LogSetting.LOG_BLOCK) && LogSetting.LOG_METHOD_END) {
-			logger.info(this.partition_tx_logStr + "Constructor End with blobid=" + this.currentBlock.blobid + ", blockid=" + this.currentBlock.blockid);
-			logger.info(this.partition_tx_logStr + "Constructor End");
+			logger.info(this.partitionTxidLogStr + "Constructor End with blobid=" + this.currentBlock.blobid + ", blockid=" + this.currentBlock.blockid);
+			logger.info(this.partitionTxidLogStr + "Constructor End");
 		}
 	}
 	private Block getNewBlock() {
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
-			logger.info(this.partition_tx_logStr + "getNewBlock Begin");
+			logger.info(this.partitionTxidLogStr + "getNewBlock Begin");
 		}
 
 		Block block = new Block();
@@ -62,7 +63,7 @@ public class BlockList {
 		this.blockList.add(blobidAndBlockidStr);		
 
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
-			logger.info(this.partition_tx_logStr + "getNewBlock End");
+			logger.info(this.partitionTxidLogStr + "getNewBlock End");
 		}
 		return block;
 	}
@@ -97,7 +98,7 @@ public class BlockList {
 	}
 	private Block getNextBlockAfterLastSuccessBatch() {
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
-			logger.info(this.partition_tx_logStr + "getNextBlockAfterLastSuccessBatch Begin");
+			logger.info(this.partitionTxidLogStr + "getNextBlockAfterLastSuccessBatch Begin");
 		}
 
 		Block block = new Block();
@@ -113,13 +114,13 @@ public class BlockList {
 			block.blobid = Integer.parseInt(strArray[0]);
 			block.blockid = Integer.parseInt(strArray[1]);
 			if (LogSetting.LOG_GET_LAST_BLOCK) {
-				logger.info(this.partition_tx_logStr + "Last record in List(" + this.key_partitionBlocklist + "): " + blockStr);
-				logger.info(this.partition_tx_logStr + "Last record in List( " + this.key_partitionBlocklist + "): blobid=" + block.blobid + ", blockid = "
+				logger.info(this.partitionTxidLogStr + "Last record in List(" + this.key_partitionBlocklist + "): " + blockStr);
+				logger.info(this.partitionTxidLogStr + "Last record in List( " + this.key_partitionBlocklist + "): blobid=" + block.blobid + ", blockid = "
 						+ block.blockid);
 			}
 		} else {
 			if (LogSetting.LOG_GET_LAST_BLOCK) {
-				logger.info(this.partition_tx_logStr + "List(" + this.key_partitionBlocklist + ") is null or empty");
+				logger.info(this.partitionTxidLogStr + "List(" + this.key_partitionBlocklist + ") is null or empty");
 			}
 		}
 		
@@ -129,14 +130,14 @@ public class BlockList {
 		block = getNextBlock(block);
 
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
-			logger.info(this.partition_tx_logStr + "getNextBlockAfterLastSuccessBatch returns blobid=" + block.blobid + ", blockid=" + block.blockid);
-			logger.info(this.partition_tx_logStr + "getNextBlockAfterLastSuccessBatch End");
+			logger.info(this.partitionTxidLogStr + "getNextBlockAfterLastSuccessBatch returns blobid=" + block.blobid + ", blockid=" + block.blockid);
+			logger.info(this.partitionTxidLogStr + "getNextBlockAfterLastSuccessBatch End");
 		}
 		return block;
 	}
 	private Block getFirstBlockInLastFailedBatch() {
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
-			logger.info(this.partition_tx_logStr + "getFirstBlockInLastFailedBatch Begin");
+			logger.info(this.partitionTxidLogStr + "getFirstBlockInLastFailedBatch Begin");
 		}
 
 		Block block = new Block();
@@ -152,12 +153,12 @@ public class BlockList {
 			block.blobid = Integer.parseInt(strArray[0]);
 			block.blockid = Integer.parseInt(strArray[1]);
 			if (LogSetting.LOG_GET_FIRST_BLOCK) {
-				logger.info(this.partition_tx_logStr + "First record in List(" + this.key_partitionBlocklist + "): " + blockStr);
-				logger.info(this.partition_tx_logStr + "First record in List(" + this.key_partitionBlocklist + "): blobid=" + block.blobid + ", blockid = "
+				logger.info(this.partitionTxidLogStr + "First record in List(" + this.key_partitionBlocklist + "): " + blockStr);
+				logger.info(this.partitionTxidLogStr + "First record in List(" + this.key_partitionBlocklist + "): blobid=" + block.blobid + ", blockid = "
 						+ block.blockid);
 			}
 		} else {
-			logger.info(this.partition_tx_logStr + "List(" + this.key_partitionBlocklist + ") is null or empty");
+			logger.info(this.partitionTxidLogStr + "List(" + this.key_partitionBlocklist + ") is null or empty");
 		}
 		String blobNameFormat = ConfigProperties.getProperty("blobNameFormat");
 		String blobname = String.format(blobNameFormat, this.partitionIndex, block.blobid);
@@ -165,29 +166,29 @@ public class BlockList {
 		this.blockList.add(blobidAndBlockidStr);		
 
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
-			logger.info(this.partition_tx_logStr + "getFirstBlockInLastFailedBatch returns blobid=" + block.blobid + ", blockid=" + block.blockid);
-			logger.info(this.partition_tx_logStr + "getFirstBlockInLastFailedBatch End");
+			logger.info(this.partitionTxidLogStr + "getFirstBlockInLastFailedBatch returns blobid=" + block.blobid + ", blockid=" + block.blockid);
+			logger.info(this.partitionTxidLogStr + "getFirstBlockInLastFailedBatch End");
 		}
 		return block;
 	}
 
 	public void persistState() {
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
-			logger.info(this.partition_tx_logStr + "persistState Begin");
+			logger.info(this.partitionTxidLogStr + "persistState Begin");
 		}
 
-		Redis.set(this.key_partition_txid, String.valueOf(this.txid));
+		Redis.set(this.partitionTxidKeyStr, String.valueOf(this.txid));
 		Redis.setList(this.key_partitionBlocklist, this.blockList);
 
 		if (LogSetting.LOG_PERSIST) {
-			logger.info(this.partition_tx_logStr + "set(" + this.key_partition_txid + ", " + this.txid + ")");
+			logger.info(this.partitionTxidLogStr + "set(" + this.partitionTxidKeyStr + ", " + this.txid + ")");
 			for (String s : this.blockList) {
-				logger.info(this.partition_tx_logStr + "addToList(" + this.key_partitionBlocklist + ", " + s + ")");
+				logger.info(this.partitionTxidLogStr + "addToList(" + this.key_partitionBlocklist + ", " + s + ")");
 			}
 		}
 
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
-			logger.info(this.partition_tx_logStr + "this.partition_tx_logStr + persistState End");
+			logger.info(this.partitionTxidLogStr + "this.partition_tx_logStr + persistState End");
 		}
 	}
 }
