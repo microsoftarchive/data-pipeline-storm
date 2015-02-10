@@ -29,7 +29,8 @@ public class BlockList {
 		}
 
 		this.blockList = new ArrayList<String>();
-		this.partitionTxidKeyStr = "p_" + String.valueOf(partitionIndex) + "_txid";
+		String partitionTxidKeyStrFormat = ConfigProperties.getProperty("partitionTxidKeyStrFormat");
+		this.partitionTxidKeyStr = String.format(partitionTxidKeyStrFormat, partitionIndex);
 		this.key_partitionBlocklist = "p_" + String.valueOf(partitionIndex) + "_blocklist";
 		this.partitionIndex = partitionIndex;
 		this.txid = txid;	
