@@ -20,5 +20,5 @@ Blob exactly-once.
 
 * [Architecture Overview](/docs/ArchitectureOverview.md)
 * [Getting Started](/docs/GettingStarted.md)
-* [Step by Step Walk Through](/docs/step-by-step-walkthrough.md)
+* [Create Topology Code From Scratch](/docs/step-by-step-walkthrough.md)
 * [Design Considerations](/docs/DesignConsiderations.md)

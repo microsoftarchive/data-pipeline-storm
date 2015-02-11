@@ -69,6 +69,7 @@ mvn clean install -Dmaven.test.skip=true
 Clone the code from https://github.com/mspnp/storm-trident.git. There are two projects in the src directory.
 * SendEvents: C# Console App which send messages to Azure Event Hub
 * eventhub-blobwriter: The java implementation of Strom/Trident topology.
+* The document [Create Java Topology project eventhub-blobwriter from Scratch](/docs/step-by-step-walkthrough.md) walks you through the steps on how the above porject is created.
 
 ## Open eventhub-blobwriter in Eclipse (optional)
 * Start Eliipse IDE
