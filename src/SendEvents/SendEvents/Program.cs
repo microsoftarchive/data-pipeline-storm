@@ -18,7 +18,7 @@ namespace SendEvents
         static string eventHubName = "hanzeventhub1";
         static string eventHubNamespace = "hanzeventhub1-ns";
         static string devicesSharedAccessPolicyName = "devices";
-        static string devicesSharedAccessPolicyKey = "JNbF2QCRLS0FVpGbbkOd/vBPdvAyNaFNe6ud+ssAVms=";
+        static string devicesSharedAccessPolicyKey = "XghKStf9qfyX8iDrCE0lVPmh4fvl9ldzBqe33bcaC/Q=";
         static string rootManageSharedAccessKey = "VremOpcEIYzpxXLIkqjgzT2ZJXBVdTSYxFhkRW6SiY8=";
         static string eventHubConnectionStr = "Endpoint=sb://" + eventHubNamespace + ".servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=" + rootManageSharedAccessKey;
         static void Main(string[] args)
@@ -56,7 +56,7 @@ namespace SendEvents
                         Console.WriteLine(serializedString);
                         EventData data = new EventData(Encoding.UTF8.GetBytes(serializedString))
                         {
-                            PartitionKey = info.code
+                            PartitionKey = info.id
                         };
 
                         // Send the message to Event Hub

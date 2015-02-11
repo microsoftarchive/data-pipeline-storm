@@ -200,8 +200,11 @@ public class BlockList {
 			logger.info(this.partitionTxidLogStr + "persistState Begin");
 		}
 
+		if (LogSetting.LOG_TRANSACTION || LogSetting.LOG_PERSIST) {
+			logger.info("persist to redis: set(" + this.partitionTxidKeyStr + ")= " + this.txid + ")");
+		}
+
 		if (LogSetting.LOG_PERSIST) {
-			logger.info(this.partitionTxidLogStr + "set(" + this.partitionTxidKeyStr + ", " + this.txid + ")");
 			for (String s : this.blockList) {
 				logger.info(this.partitionTxidLogStr + "addToList(" + this.partitionBlocklistKeyStr + ", " + s + ")");
 			}
