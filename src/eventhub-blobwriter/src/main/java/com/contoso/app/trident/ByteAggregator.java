@@ -26,14 +26,15 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 	private int partitionIndex;
 
 	public ByteAggregator() {
-		logger.info("Constructor Begin");
-		logger.info("Constructor End");
+		if (LogSetting.LOG_CONSTRUCTOR) {
+			logger.info("Constructor");
+		}
 	}
 
 	@Override
 	public void prepare(@SuppressWarnings("rawtypes") Map conf, TridentOperationContext context) {
 
-		if (LogSetting.LOG_INSTANCE && LogSetting.LOG_METHOD_BEGIN) {
+		if (LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("prepare Begin");
 		}
 
@@ -41,7 +42,7 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 
 		super.prepare(conf, context);
 
-		if (LogSetting.LOG_INSTANCE && LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_METHOD_END) {
 			logger.info("p" + this.partitionIndex + ": prepare End");
 		}
 	}

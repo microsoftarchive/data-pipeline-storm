@@ -27,7 +27,7 @@ public class BlockList {
 		String partitionTxidLogStrFormat = ConfigProperties.getProperty("partitionTxidLogStrFormat");
 		this.partitionTxidLogStr = String.format(partitionTxidLogStrFormat, partitionIndex, txid);
 
-		if ((LogSetting.LOG_INSTANCE || LogSetting.LOG_BLOCK) && LogSetting.LOG_METHOD_BEGIN) {
+		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(partitionTxidLogStr + "Constructor Begin");
 		}
 
@@ -42,27 +42,35 @@ public class BlockList {
 		this.partitionBlocklistKeyStr = String.format(partitionBlocklistKeyStrFormat, partitionIndex);
 
 		String lastTxidStr = Redis.get(this.partitionTxidKeyStr);
-		if (lastTxidStr == null) { // the very first time the topology is
-									// running
+
+		if (lastTxidStr == null) { // the very first time the topology is running
 			this.currentBlock = getNewBlock();
+			if (LogSetting.LOG_TRANSACTION) {
+				logger.info("First Batch: partition= " + this.partitionTxidKeyStr + " lastTxidStr= " + lastTxidStr + " txid= " + txid);
+			}
 		} else {
 			long lastTxid = Long.parseLong(lastTxidStr);
-			if (txid != lastTxid) { // a new batch, not a replay, last batch is
-									// successful
+			if (txid != lastTxid) { // a new batch, not a replay, last batch is successful
 				this.currentBlock = getNextBlockAfterLastSuccessBatch();
+				if (LogSetting.LOG_TRANSACTION) {
+					logger.info("New Batch: partition= " + this.partitionTxidKeyStr + " lastTxidStr= " + lastTxidStr + " txid= " + txid);
+				}
 			} else {// if(txid == lastTxid), a replay, overwrite old block
 				this.currentBlock = getFirstBlockInLastFailedBatch();
+				if (LogSetting.LOG_TRANSACTION) {
+					logger.info("Replay: partition= " + this.partitionTxidKeyStr + " lastTxidStr= " + lastTxidStr + " txid= " + txid);
+				}
 			}
 		}
 
-		if ((LogSetting.LOG_INSTANCE || LogSetting.LOG_BLOCK) && LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_END) {
 			logger.info(this.partitionTxidLogStr + "Constructor End with blobid=" + this.currentBlock.blobid + ", blockid=" + this.currentBlock.blockid);
 			logger.info(this.partitionTxidLogStr + "Constructor End");
 		}
 	}
 
 	private Block getNewBlock() {
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
+		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(this.partitionTxidLogStr + "getNewBlock Begin");
 		}
 
@@ -73,14 +81,14 @@ public class BlockList {
 		String blobidAndBlockidStr = block.build(blobname);
 		this.blockList.add(blobidAndBlockidStr);
 
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_END) {
 			logger.info(this.partitionTxidLogStr + "getNewBlock End");
 		}
 		return block;
 	}
 
 	public Block getNextBlock(Block current) {
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
+		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("getNextBlock Begin");
 		}
 
@@ -100,7 +108,7 @@ public class BlockList {
 		String blobidAndBlockidStr = block.build(blobname);
 		this.blockList.add(blobidAndBlockidStr);
 
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_END) {
 			logger.info("getNextBlock returns blobid=" + block.blobid + ", blockid=" + block.blockid);
 			logger.info("getNextBlock End");
 		}
@@ -109,7 +117,7 @@ public class BlockList {
 	}
 
 	private Block getNextBlockAfterLastSuccessBatch() {
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
+		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(this.partitionTxidLogStr + "getNextBlockAfterLastSuccessBatch Begin");
 		}
 
@@ -142,7 +150,7 @@ public class BlockList {
 		String blobidAndBlockidStr = block.build(blobname);
 		block = getNextBlock(block);
 
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_END) {
 			logger.info(this.partitionTxidLogStr + "getNextBlockAfterLastSuccessBatch returns blobid=" + block.blobid + ", blockid=" + block.blockid);
 			logger.info(this.partitionTxidLogStr + "getNextBlockAfterLastSuccessBatch End");
 		}
@@ -150,7 +158,7 @@ public class BlockList {
 	}
 
 	private Block getFirstBlockInLastFailedBatch() {
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
+		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(this.partitionTxidLogStr + "getFirstBlockInLastFailedBatch Begin");
 		}
 
@@ -180,7 +188,7 @@ public class BlockList {
 		String blobidAndBlockidStr = block.build(blobname);
 		this.blockList.add(blobidAndBlockidStr);
 
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_END) {
 			logger.info(this.partitionTxidLogStr + "getFirstBlockInLastFailedBatch returns blobid=" + block.blobid + ", blockid=" + block.blockid);
 			logger.info(this.partitionTxidLogStr + "getFirstBlockInLastFailedBatch End");
 		}
@@ -188,12 +196,9 @@ public class BlockList {
 	}
 
 	public void persistState() {
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
+		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(this.partitionTxidLogStr + "persistState Begin");
 		}
-
-		Redis.set(this.partitionTxidKeyStr, String.valueOf(this.txid));
-		Redis.setList(this.partitionBlocklistKeyStr, this.blockList);
 
 		if (LogSetting.LOG_PERSIST) {
 			logger.info(this.partitionTxidLogStr + "set(" + this.partitionTxidKeyStr + ", " + this.txid + ")");
@@ -202,7 +207,10 @@ public class BlockList {
 			}
 		}
 
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
+		Redis.set(this.partitionTxidKeyStr, String.valueOf(this.txid));
+		Redis.setList(this.partitionBlocklistKeyStr, this.blockList);
+
+		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_END) {
 			logger.info(this.partitionTxidLogStr + "this.partition_tx_logStr + persistState End");
 		}
 	}
