@@ -28,9 +28,11 @@ devices | Send
 storm   | Listen
 
 ### Create the HDInsight Storm cluster
-- Sign in to the azure and create a storm cluster and create a Storm cluster
+- Sign in to the azure and create a storm cluster
 
 ## Install Java Dependencies
+
+Several of the dependencies in *eventhub-blobwriter* java storm project must be downloaded and built individually, then installed into the local Maven repository on your development environment.
 
 ### Install Microsoft Azure SDK for Java
 - Clone [Microsoft Azure SDK for Java](https://github.com/Azure/azure-sdk-for-java)
@@ -49,7 +51,6 @@ mvn clean install -Dmaven.test.skip=true
 ```
 
 ### Install the Event Hub spout
-Several of the dependencies used in this project must be downloaded and built individually, then installed into the local Maven repository on your development environment.
 In order to receive data from Event Hub, we will use the eventhubs-storm-spout.
 - Use Remote Desktop to connect to your Storm cluster, then copy the %STORM_HOME%\examples\eventhubspout\eventhubs-storm-spout-0.9-jar-with-dependencies.jar file to your local development environment.
 - Use the following command to install the package into the local Maven store. This will allow us to easily add it as a reference in the Storm project in a later step.
@@ -65,11 +66,11 @@ mvn install:install-file -Dfile=eventhubs-storm-spout-0.9-jar-with-dependencies.
 ```
 mvn clean install -Dmaven.test.skip=true
 ```
-## Clone the source code for the Reference Implementation
+## Clone the source code of the Reference Implementation
 Clone the code from https://github.com/mspnp/storm-trident.git. There are two projects in the src directory.
 * SendEvents: C# Console App which send messages to Azure Event Hub
 * eventhub-blobwriter: The java implementation of Strom/Trident topology.
-* The document [Create Java Topology project eventhub-blobwriter from Scratch](/docs/step-by-step-walkthrough.md) walks you through the steps on how the above project is created.
+The document [Create Java Topology project eventhub-blobwriter from Scratch](/docs/step-by-step-walkthrough.md) walks you through the steps on how the above project is created.
 
 ## Open eventhub-blobwriter in Eclipse (optional)
 * Start Eclipse IDE
@@ -166,11 +167,11 @@ namespace SendEvents
 }
 ```
 
-## Test the topology
+## Run the topology
 
-### Test the topology locally
+### Run the topology on development machin
 
-To test on your development machine, use the following steps.
+To run on your development machine, use the following steps.
 - Start the SendEvent .NET application to begin sending events, so that you have something to read from Event Hub.
 - Start the topology locally Option 1:
 In eclipse, open the eventhub-blobwriter package, and then open BlobWriterTopology.java file. Press F11 to start the topology.
@@ -190,7 +191,7 @@ You can stop the topology by entering Ctrl-C.
 
 
 
-### Test the topology in HDInsight Storm
+### Run the topology in HDInsight Storm Cluster
 On your development environment, use the following steps to run the Temperature topology on your HDInsight Storm Cluster.
 - Use the following command to create a JAR package from your project.
 
@@ -200,7 +201,7 @@ mvn package
 
 This will create a file named eventhub-blobwriter-1.0-SNAPSHOT.jar in the target directory of your project.
 - On your local development machine, start the SendEvents .NET application, so that we have some events to read.
-- Connect to your HDInsight Storm cluster using Remote Desktop, and copy the jar file to the c:\apps\dist\storm<version number> directory.
+- Connect to your HDInsight Storm cluster using Remote Desktop, and copy the eventhub-blobwriter-1.0-SNAPSHOT.jar file to the c:\apps\dist\storm<version number> directory.
 - Use the HDInsight Command Line icon on the cluster desktop to open a new command prompt, and use the following commands to run the topology.
 
 ```
