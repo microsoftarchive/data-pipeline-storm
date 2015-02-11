@@ -9,37 +9,80 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import backtype.storm.topology.FailedException;
 import redis.clients.jedis.Jedis;
 
 @SuppressWarnings("unused")
 public class Redis {
-	static String host;
-	static String password;
+	private static String host;
+	private static String password;
+	private static int port;
+	private static int timeout;
+	private static boolean useSSL = true;
+	private static Jedis jedis = null;
 
 	static {
 		host = ConfigProperties.getProperty("redis.host");
 		password = ConfigProperties.getProperty("redis.password");
+		port = Integer.parseInt(ConfigProperties.getProperty("redis.port"));
+		timeout = Integer.parseInt(ConfigProperties.getProperty("redis.timeout"));
+		connect();
 	}
+
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(Redis.class);
+
+	private static void connect() {
+		jedis = new Jedis(host, port, timeout, useSSL);
+		jedis.auth(password);
+		jedis.connect();
+	}
+
+	static private Object callJedis(String operation, String key, Object value) {
+		Object result = null;
+		if (!jedis.isConnected()) {
+			connect();
+		}
+		if (jedis.isConnected()) {
+			switch (operation) {
+			case "flushDB":
+				result = jedis.flushDB();
+				break;
+			case "get":
+				result = jedis.get(key);
+				break;
+			case "set":
+				result = jedis.set(key, (String) value);
+				break;
+			case "getList":
+				int maxLength = (int) value;
+				result = jedis.lrange(key, 0, maxLength - 1);
+				break;
+			case "setList":
+				jedis.del(key);
+				@SuppressWarnings("unchecked")
+				List<String> stringList = (List<String>) value;
+				for (String str : stringList) {
+					jedis.lpush(key, str);
+				}
+				break;
+			default:
+				break;
+			}
+		} else {
+			if (LogSetting.LOG_REDIS) {
+				logger.info("Error: can't cannect to Redis !!!!!");
+				throw new FailedException("can't cannect to Redis");
+			}
+		}
+		return result;
+	}
 
 	static public void flushDB() {
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("flushDB Begin");
-			logger.info("flushDB params: host= " + host);
 		}
 
-		Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port,
-															// timeout,isSSL
-		jedis.auth(password);
-		jedis.connect();
-		if (jedis.isConnected()) {
-			jedis.flushDB();
-		} else {
-			if (LogSetting.LOG_REDIS) {
-				logger.info("flushDB connection error !!!!!");
-			}
-		}
-		jedis.close();
+		Redis.callJedis("flushDB", "", null);
 
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_END) {
 			logger.info("flushDB End");
@@ -49,22 +92,10 @@ public class Redis {
 	static public String get(String key) {
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("get Begin");
-			logger.info("get params: host= " + host + " key= " + key);
+			logger.info("get params: key= " + key);
 		}
 
-		String value = null;
-		Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port,
-															// timeout,isSSL
-		jedis.auth(password);
-		jedis.connect();
-		if (jedis.isConnected()) {
-			value = jedis.get(key);
-		} else {
-			if (LogSetting.LOG_REDIS) {
-				logger.info("get connection error !!!!!");
-			}
-		}
-		jedis.close();
+		String value = (String) Redis.callJedis("get", key, null);
 
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_END) {
 			logger.info("get returns " + value);
@@ -79,18 +110,7 @@ public class Redis {
 			logger.info("set params: host= " + host + " key= " + key + " value= " + value);
 		}
 
-		Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port,
-															// timeout,isSSL
-		jedis.auth(password);
-		jedis.connect();
-		if (jedis.isConnected()) {
-			jedis.set(key, value);
-		} else {
-			if (LogSetting.LOG_REDIS) {
-				logger.info("set connection error !!!!!");
-			}
-		}
-		jedis.close();
+		Redis.callJedis("set", key, null);
 
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_END) {
 			logger.info("set End");
@@ -102,24 +122,15 @@ public class Redis {
 			logger.info("getList Begin");
 			logger.info("getList params: key= " + key + " maxLength= " + maxLength);
 		}
-
-		Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port,
-															// timeout,isSSL
-		List<String> stringList = null;
-		jedis.auth(password);
-		jedis.connect();
-		if (jedis.isConnected()) {
-			stringList = jedis.lrange(key, 0, maxLength - 1);
-		} else {
-			if (LogSetting.LOG_REDIS) {
-				logger.info("getList connection error !!!!!");
-			}
-		}
-		jedis.close();
-
-		if (stringList != null) {
-			for (String s : stringList) {
-				logger.info("getList returns: " + s);
+		@SuppressWarnings("unchecked")
+		List<String> stringList = (List<String>) Redis.callJedis("getList", key, maxLength);
+		if (LogSetting.LOG_REDIS) {
+			if (stringList == null) {
+				logger.info("getList returns 0 record");
+			} else {
+				for (String s : stringList) {
+					logger.info("getList returns: " + s);
+				}
 			}
 		}
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_END) {
@@ -131,9 +142,8 @@ public class Redis {
 	static public void setList(String key, List<String> stringList) {
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("setList Begin");
-			logger.info("getList params: host= " + host + " key= " + key);
+			logger.info("getList params: key= " + key);
 		}
-
 		if (stringList == null || stringList.isEmpty()) {
 			if (LogSetting.LOG_REDIS) {
 				logger.info("setList params stringList is empty  !!!!!!");
@@ -144,23 +154,7 @@ public class Redis {
 					logger.info("setList params stringlist: " + s);
 				}
 			}
-
-			Jedis jedis = new Jedis(host, 6380, 3600, true); // host, port,
-																// timeout,isSSL
-			jedis.auth(password);
-			jedis.connect();
-			if (jedis.isConnected()) {
-				jedis.del(key);
-				for (String str : stringList) {
-					jedis.lpush(key, str);
-				}
-			} else {
-				if (LogSetting.LOG_REDIS) {
-					logger.info("setList connection error !!!!!");
-				}
-			}
-
-			jedis.close();
+			Redis.callJedis("setList", key, stringList);
 		}
 		if (LogSetting.LOG_REDIS && LogSetting.LOG_METHOD_END) {
 			logger.info("setList End");

@@ -42,7 +42,7 @@ public class BlobWriter {
 
 			if (LogSetting.LOG_BLOB_WRITER) {
 				logger.info("upload accountName = " + accountName);
-				logger.info("upload accountKey = " + accountKey);
+				// logger.info("upload accountKey = " + accountKey);
 				logger.info("upload containerName = " + containerName);
 				logger.info("upload connectionStr = " + connectionStr);
 				logger.info("upload blobname = " + blobname);
