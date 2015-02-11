@@ -4,7 +4,7 @@
 Follow the section **Install Java Dependencies** in [Getting Started](/docs/GettingStarted.md) to install the dependencies to your local Maven store.
 
 ## Clone the source code for the Reference Implementation
-Follow the section **Clone the source code for the Reference Implementation** in [Getting Started](/docs/GettingStarted.md) to clone soruce code. You need copy the content of the java files.
+Follow the section **Clone the source code for the Reference Implementation** in [Getting Started](/docs/GettingStarted.md) to clone source code. You need copy the content of the java files.
 
 
 ## Scaffold the Storm topology project

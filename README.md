@@ -20,5 +20,5 @@ Blob exactly-once.
 
 * [Architecture Overview](/docs/ArchitectureOverview.md)
 * [Getting Started](/docs/GettingStarted.md)
-* [Create Topology Code From Scratch](/docs/step-by-step-walkthrough.md)
+* [Create Java Topology Project eventhub-blobwriter from Scratch](/docs/step-by-step-walkthrough.md)
 * [Design Considerations](/docs/DesignConsiderations.md)
