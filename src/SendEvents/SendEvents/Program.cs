@@ -45,17 +45,18 @@ namespace SendEvents
                         // Create the event
                         Event info = new Event()
                         {
+                            id = devices.ToString(),
                             lat = -30 + random.Next(75),
                             lng = -120+random.Next(70),
                             time = DateTime.UtcNow.Ticks,
-                            diagnosisCode = (310 + random.Next(20)).ToString()
+                            code = (310 + random.Next(20)).ToString()
                         };
                         // Serialize to JSON
                         var serializedString = JsonConvert.SerializeObject(info);
                         Console.WriteLine(serializedString);
                         EventData data = new EventData(Encoding.UTF8.GetBytes(serializedString))
                         {
-                            PartitionKey = info.diagnosisCode
+                            PartitionKey = info.code
                         };
 
                         // Send the message to Event Hub
@@ -78,13 +79,15 @@ namespace SendEvents
     public class Event
     {
         [DataMember]
+        public string id { get; set; }
+        [DataMember]
         public double lat { get; set; }
         [DataMember]
         public double lng { get; set; }
         [DataMember]
         public long time { get; set; }
         [DataMember]
-        public string diagnosisCode { get; set; }
+        public string code { get; set; }
 
     }
 }
