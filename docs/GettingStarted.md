@@ -52,7 +52,8 @@ mvn clean install -Dmaven.test.skip=true
 
 ### Install the Event Hub spout
 In order to receive data from Event Hub, we will use the eventhubs-storm-spout.
-- Use Remote Desktop to connect to your Storm cluster, then copy the %STORM_HOME%\examples\eventhubspout\eventhubs-storm-spout-0.9-jar-with-dependencies.jar file to your local development environment.
+- Use Remote Desktop to connect to your Storm cluster, then copy the
+%STORM_HOME%\examples\eventhubspout\eventhubs-storm-spout-0.9-jar-with-dependencies.jar file to your local development environment.
 - Use the following command to install the package into the local Maven store. This will allow us to easily add it as a reference in the Storm project in a later step.
 
 ```
@@ -195,11 +196,10 @@ mvn package
 
 This will create a file named eventhub-blobwriter-1.0-SNAPSHOT.jar in the target directory of your project.
 - On your local development machine, start the SendEvents .NET application, so that we have some events to read.
-- Connect to your HDInsight Storm cluster using Remote Desktop, and copy the eventhub-blobwriter-1.0-SNAPSHOT.jar file to the c:\apps\dist\storm<version number> directory.
-- Use the HDInsight Command Line icon on the cluster desktop to open a new command prompt, and use the following commands to run the topology.
+- Connect to your HDInsight Storm cluster using Remote Desktop, and copy the eventhub-blobwriter-1.0-SNAPSHOT.jar file to the c:\apps\dist\storm-0.9.1.2.1.10.0-2290 directory.
+- Use the **Storm Command Line** icon on the cluster desktop to open a new storm command prompt, and use the following commands to run the topology.
 
 ```
-cd %storm_home%
 bin\storm jar eventhub-blobwriter-1.0-SNAPSHOT.jar com.contoso.app.trident.BlobWriterTopology  MyTopologyName  
 ```
 
