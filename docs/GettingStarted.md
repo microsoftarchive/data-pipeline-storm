@@ -68,12 +68,18 @@ mvn clean install -Dmaven.test.skip=true
 ## Clone the source code for the Reference Implementation
 Clone the code from https://github.com/mspnp/storm-trident.git. There are two projects in the src directory.
 * SendEvents: C# Console App which send messages to Azure Event Hub
-* eventhub-blobwriter: The java implementation of Strom/Trident topology .
+* eventhub-blobwriter: The java implementation of Strom/Trident topology.
+
+## Open eventhub-blobwriter in Eclipse (optional)
+* Start Eliipse IDE
+* Switch Workspace to \data-pipeline-storm\src folder
+* Insert Existing Maven Project /eventhub-blobwriter/pom.xml
+* You should see a list of java files under src/main/java folder for package com.contoso.app.trident
 
 ## Modify the configurations
 
 ### Modify Config.properties
-modify the Config.properties file in eventhub-blobwriter project according to you settings:
+Open Config.properties file under conf folder in eventhub-blobwriter project. Modify the values according to your setting:
 
 ```
 eventhubspout.username = storm
@@ -90,12 +96,21 @@ storage.blob.account.name = [YourStorageAccountName]
 storage.blob.account.key =[YourStorageAccountKey]
 storage.blob.account.container = [YourStorageAccountContainerName]
 #number of blocks in each blob default to 50000
-storage.blob.block.number.max = 2
+storage.blob.block.number.max = 50000
 #max bytes in each block default to 4194304 Byte
-storage.blob.block.bytes.max = 1024
+storage.blob.block.bytes.max = 4194304
 #Redis cache
 redis.host = [YourRedisName].redis.cache.windows.net
 redis.password = [YourRedisKey]
+redis.port = 6380
+redis.timeout = 3600
+#string format
+blobidBlockidStrFormat = %05d_%05d
+blobNameFormat = aaa/blobwriter/%05d/%05d
+blockIdStrFormat = %05d
+partitionTxidLogStrFormat = partition=%05d_Txid=%05d:
+partitionTxidKeyStrFormat = p_%05d_Txid
+partitionBlocklistKeyStrFormat = p_%05d__Blocklist
 ```
 
 ### Modify LogSetting class
@@ -132,7 +147,7 @@ public class LogSetting {
 
 ### Modify Configuration for SendEvent
 
-Modify Program.cs in SendEvent C# Console App using your Event hub settings.
+Start Visual Studio, and open SendEvents.sln, modify Program.cs using your Event hub settings.
 
 ``` C#
 namespace SendEvents
@@ -154,25 +169,53 @@ namespace SendEvents
 
 ### Test the topology locally
 
-To compile and test the file on your development machine, use the following steps.
-- Start the SendEvent .NET application to begin sending events, so that we have something to read from Event Hub.
-- Start the topology locally using the following command
-- mvn compile exec:java -Dstorm.topology=com.contoso.app.trident.BlobWriterTopology
-- This will start the topology, read messages from Event Hub, and upload them to azure blob storage
-- After verifying that this works, stop the topology by entering Ctrl-C. To stop the SendEvent app, select the window and press any key.
+To test on your development machine, use the following steps.
+- Start the SendEvent .NET application to begin sending events, so that you have something to read from Event Hub.
+- Start the topology locally Option 1:
+In eclipse, open the eventhub-blobwriter package, and then open BlobWriterTopology.java file. Press F11 to start the topology.
+This will start the topology, read messages from Event Hub, and upload them to azure blob storage.
+- Verify that the message are uploaded to azure blob.
+Start [Azure Storage Explorer](https://azurestorageexplorer.codeplex.com/). Click **refresh** button and then click on the container for the uploaded blobs.
+- Note: to restart the topology, you need to delete the existing blobs. A simple way is just delete the container each time you start the topology.
+
+- Start the topology locally Option 2:
+You can also start the topology by running the following command line:
+
+```
+mvn compile exec:java  -Dstorm.topology=com.contoso.app.trident.BlobWriterTopology
+```
+
+You can stop the topology by entering Ctrl-C.
+
+
 
 ### Test the topology in HDInsight Storm
 On your development environment, use the following steps to run the Temperature topology on your HDInsight Storm Cluster.
 - Use the following command to create a JAR package from your project.
+
+```
 mvn package
+```
+
 This will create a file named eventhub-blobwriter-1.0-SNAPSHOT.jar in the target directory of your project.
 - On your local development machine, start the SendEvents .NET application, so that we have some events to read.
 - Connect to your HDInsight Storm cluster using Remote Desktop, and copy the jar file to the c:\apps\dist\storm<version number> directory.
 - Use the HDInsight Command Line icon on the cluster desktop to open a new command prompt, and use the following commands to run the topology.
+
+```
 cd %storm_home%
-bin\storm jar eventhub-blobwriter-1.0-SNAPSHOT.jar com.contoso.app.trident.BlobWriterTopology  BlobWriterTopology  
+bin\storm jar eventhub-blobwriter-1.0-SNAPSHOT.jar com.contoso.app.trident.BlobWriterTopology  MyTopologyName  
+```
+
+- To verify that the message are uploaded to azure blob.
+Start [Azure Storage Explorer](https://azurestorageexplorer.codeplex.com/). Click **refresh** button and then click on the container for the uploaded blobs.
+
+- Note: to restart the topology, you need to delete the existing blobs. A simple way is just delete the container each time you start the topology.
+
+
+
 - To stop the topology, go to the Remote Desktop session with the Storm cluster and enter the following in the HDInsight Command Line.
 
 ```
-bin\storm kill BlobWriterTopology  
+bin\storm kill MyTopologyName  
 ```
