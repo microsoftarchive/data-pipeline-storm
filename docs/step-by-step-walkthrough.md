@@ -241,15 +241,10 @@ eventhubs-storm-spout reads configuration information from a Config.properties f
 - Create a new file ByteAggregator.java in directory \eventhub-blobwriter\src\main\java\com\contoso\app\trident\
 - Copy the content from the cloned file to the above file.
 
-
 ### Add ConfigProperties class
 
 - Create a new file ConfigProperties.java in directory \eventhub-blobwriter\src\main\java\com\contoso\app\trident\
 - Copy the content from the cloned file to the above file.
-
-### Add EventHubMessage class to support serialization to and from JSON
-- Create a new file EventHubMessage.jav in directory \eventhub-blobwriter\src\main\java\com\contoso\app\trident\
-
 
 ### Add LogSetting class
 
