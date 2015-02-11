@@ -74,8 +74,8 @@ Clone the code from https://github.com/mspnp/storm-trident.git. There are two pr
 ## Open eventhub-blobwriter in Eclipse (optional)
 * Start Eclipse IDE
 * Switch Workspace to \data-pipeline-storm\src folder
-* Insert Existing Maven Project /eventhub-blobwriter/pom.xml
-* You should see a list of java files under src/main/java folder for package com.contoso.app.trident
+* import Existing Maven Project: /eventhub-blobwriter/pom.xml
+* You should see a list of java files under srcmain/java folder for package com.contoso.app.trident
 
 ## Modify the configurations
 
