@@ -11,7 +11,7 @@ public final class LogSetting {
 	public static final boolean LOG_CONSTRUCTOR = false;
 	public static final boolean LOG_BLOCK_ROLL_OVER = false;
 	public static final boolean LOG_BLOCK = false;
-	public static final boolean LOG_PERSIST = false;
+	public static final boolean LOG_PERSIST = true;
 	public static final boolean LOG_GET_LAST_BLOCK = false;
 	public static final boolean LOG_GET_FIRST_BLOCK = false;
 	public static final boolean LOG_BLOB_WRITER = false;

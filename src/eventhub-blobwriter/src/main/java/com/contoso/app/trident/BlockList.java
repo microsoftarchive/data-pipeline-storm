@@ -46,19 +46,19 @@ public class BlockList {
 		if (lastTxidStr == null) { // the very first time the topology is running
 			this.currentBlock = getNewBlock();
 			if (LogSetting.LOG_TRANSACTION) {
-				logger.info("First Batch: partition= " + this.partitionTxidKeyStr + " lastTxidStr= " + lastTxidStr + " txid= " + txid);
+				logger.info("First Batch: partition= " + this.partitionIndex + " last txid= " + lastTxidStr + " current txid= " + txid);
 			}
 		} else {
 			long lastTxid = Long.parseLong(lastTxidStr);
 			if (txid != lastTxid) { // a new batch, not a replay, last batch is successful
 				this.currentBlock = getNextBlockAfterLastSuccessBatch();
 				if (LogSetting.LOG_TRANSACTION) {
-					logger.info("New Batch: partition= " + this.partitionTxidKeyStr + " lastTxidStr= " + lastTxidStr + " txid= " + txid);
+					logger.info("New Batch: partition= " + this.partitionIndex + " last txid= " + lastTxidStr + " current txid= " + txid);
 				}
 			} else {// if(txid == lastTxid), a replay, overwrite old block
 				this.currentBlock = getFirstBlockInLastFailedBatch();
 				if (LogSetting.LOG_TRANSACTION) {
-					logger.info("Replay: partition= " + this.partitionTxidKeyStr + " lastTxidStr= " + lastTxidStr + " txid= " + txid);
+					logger.info("Replay: partition= " + this.partitionIndex + " last txid= " + lastTxidStr + " current txid= " + txid);
 				}
 			}
 		}
@@ -202,11 +202,12 @@ public class BlockList {
 
 		if (LogSetting.LOG_TRANSACTION || LogSetting.LOG_PERSIST) {
 			logger.info("persist to redis: set(" + this.partitionTxidKeyStr + ")= " + this.txid + ")");
+			logger.info("persist to redis: number of blocks= " + this.blockList.size());
 		}
 
 		if (LogSetting.LOG_PERSIST) {
 			for (String s : this.blockList) {
-				logger.info(this.partitionTxidLogStr + "addToList(" + this.partitionBlocklistKeyStr + ", " + s + ")");
+				logger.info("persist to redis: " + this.partitionTxidLogStr + " addToList(" + this.partitionBlocklistKeyStr + ", " + s + ")");
 			}
 		}
 
