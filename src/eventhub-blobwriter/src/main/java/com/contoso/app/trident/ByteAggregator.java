@@ -56,8 +56,6 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 			this.txid = ((TransactionAttempt) batchId).getTransactionId();
 		}
 		BlockList blockList = new BlockList(this.partitionIndex, this.txid);
-		// BlobWriter.remove(state.blockIdStrFormat, state.block.blobname,
-		// state.block.blockidStr);
 
 		if (LogSetting.LOG_BATCH && LogSetting.LOG_METHOD_END) {
 			logger.info(blockList.partitionTxidLogStr + "init End");

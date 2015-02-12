@@ -30,7 +30,7 @@ public class BlobWriter {
 		Logger logger = (Logger) LoggerFactory.getLogger(BlobWriter.class);
 		InputStream stream = null;
 		try {
-			if (LogSetting.LOG_BLOB_WRITER && LogSetting.LOG_METHOD_BEGIN) {
+			if (LogSetting.LOG_BLOB_WRITER || LogSetting.LOG_METHOD_BEGIN) {
 				logger.info("upload Begin");
 			}
 
@@ -41,10 +41,10 @@ public class BlobWriter {
 			String connectionStr = String.format(connectionStrFormatter, accountName, accountKey);
 
 			if (LogSetting.LOG_BLOB_WRITER) {
-				logger.info("upload accountName = " + accountName);
+				// logger.info("upload accountName = " + accountName);
 				// logger.info("upload accountKey = " + accountKey);
 				logger.info("upload containerName = " + containerName);
-				logger.info("upload connectionStr = " + connectionStr);
+				// logger.info("upload connectionStr = " + connectionStr);
 				logger.info("upload blobname = " + blobname);
 				logger.info("upload blockIdStr = " + blockIdStr);
 			}
@@ -107,7 +107,7 @@ public class BlobWriter {
 				}
 			}
 		}
-		if (LogSetting.LOG_BLOB_WRITER && LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_BLOB_WRITER || LogSetting.LOG_METHOD_END) {
 			logger.info("upload End");
 		}
 	}
