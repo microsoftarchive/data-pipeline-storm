@@ -20,8 +20,11 @@ class Event
 and we want to read messages from event hub and store in the event hub like the following:
 
 {"id":"6","lat":-23.0,"lng":-101.0,"time":635592916706898269,"code":"313"}
+
 {"id":"14","lat":-25.0,"lng":-118.0,"time":635592916706898269,"code":"311"}
+
 {"id":"15","lat":24.0,"lng":-58.0,"time":635592916706908297,"code":"327"}
+
 {"id":"979","lat":-13.0,"lng":-110.0,"time":635592916731418392,"code":"326"}
 
 ## Batching
@@ -58,27 +61,39 @@ Trident is a high-level abstraction on top of Storm. Trident process messages in
 
 Sincne the core business scenario for the reference implementation is to aggregate individual messages into an Azure block, the batching feature provided by Trident makes it a good choice. We can simply aggregate a batch into a block if the batch can fits. If a batch is bigger than the max size of a block, we can split the batch up in to several blocks. The only limitation is that when the batch is smaller than a block, in which case, the block will not be filled up with its max size.
 
-## What are built-in stream groupings in Storm and what kind of grouping do we need for our scenario?
+## What are built-in stream groupings in Storm and what kind of grouping are suitable for our scenario?
 Storm has seven built-in stream groupings:
+
 1. Shuffle grouping
+
 2. Fields grouping
+
 3. All grouping
+
 4. Global grouping
+
 5. None grouping
+
 6. Direct grouping
+
 7. Local or shuffle grouping
 
 We need to have all messaged in an event hub partition stored in the same Azure blobs. So if we decide to use Storm, it's natural that we want use Fields grouping with partitionId. That means that the spout need to emit the partitionID.
 
 However, if we use Trident, the core data model in Trident is the "Stream", processed as a series of batches. A stream is partitioned among the nodes in the cluster, and operations applied to a stream are applied in parallel across each partition. No explicit grouping is needed for partitionID.
 
-## What are Trident the operations and which are need for our scenario?
+## What are Trident the operations and which are suitable for our scenario?
 There are five kinds of operations in Trident:
-1.  Partition-local Operations:
-2.  Repartitioning operations
-3.  Aggregation operations
-4.  Operations on grouped streams
-5.  Merges and joins
+
+1. Partition-local Operations
+
+2. Repartitioning operations
+
+3. Aggregation operations
+
+4. Operations on grouped streams
+
+5. Merges and joins
 
 We want to messages in each partition to be aggregated and stored in its corresponding Azure blobs. So we should pick the first one: Operations that apply locally to each partition and cause no network transfer.
 
@@ -99,7 +114,9 @@ public interface Aggregator<T> extends Operation {
 Aggregators can emit any number of tuples with any number of fields. They can emit tuples at any point during execution. Aggregators execute in the following way:
 
 1.  The init method is called before processing the batch.
+
 2.  The aggregate method is called for each input tuple in the batch partition.
+
 3.  The complete method is called when all tuples for the batch partition have been processed by aggregate.
 
 # Implementation Detail
@@ -144,9 +161,13 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 ```
 
 Here are the key point of ByteAggregate class:
+
 1. paritionIndex is retrieved in the the prepare method, which is defined in the operation interface. prepare is called once for each partition when the topology starts.
+
 2. txid is retrieved in the init method, which get called by the Trident before processing each batch.
+
 3. tuple string is added into to the block data in aggregate method. When a block is filled up, it is uploaded to Azure storage.
+
 4. the blockList is persisted in the complete method, which stores partitionid, transactionid, blockname, and blockids to Redis cache. In case next replay, those blocks that are uploaded to Azure storage will be over written to remove the duplication. If next batch is not a replay, the previous uploaded blocks will be permanent.
 
 # Techinical How-To
@@ -180,8 +201,11 @@ We decided to develop the emulator for send event to event hub based on:
 The following is the GitHub repo for it:
 
 [Blackmist/hdinsight-eventhub-example](https://github.com/Blackmist/hdinsight-eventhub-example)
+
 ## Is there any existing storm spout for event hub?
+
 Yes. [Analyzing sensor data with Storm and HBase in HDInsight (Hadoop)](http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-sensor-data-analysis/) has the sample code for using storm spout for event hub.
+
 ## How to use the eventhub spout included in the HDI Storm in your java program?
 Here are the steps:
 
@@ -393,11 +417,9 @@ hadoop jar c:\hanz.jar storm.blueprints.chapter1.v1.WriteToBlob "-Ddfs.support.a
 Sample PowerShell script :
 
 ```
-# 1. Ensure to install and Configure Windows Azure PowerShell from:
+# Ensure to install and Configure Windows Azure PowerShell from:
 # http://azure.microsoft.com/en-us/documentation/articles/install-configure-powershell/
 Add-AzureAccount
-
-```
 $ClusterName = "myclustername"
 $DefaultContainerName = $ClusterName
 $ClusterLocation = "West US"
@@ -420,8 +442,11 @@ New-AzureHDInsightCluster -Name $ClusterName -Config $Config -Location $ClusterL
 ```
 
 ## How to deploy storm topology written in java to azure?
+
 1.	Create myStormApp.jar file that includes the topology and dependencies
+
 2.	Copy myStormApp.jar to the HdInsight storm head node
+
 3.	Start storm command line and run:
 
 ```
@@ -439,8 +464,11 @@ Storm kill wordcount
 # Logging and Performance Monitoring with Storm
 ## How to do performance monitoring in storm?
 Storm UI provide real time performance result.
+
 1.	Connect to storm head node
+
 2.	Start Storm UI
+
 3.	We can see:
 
 -	perf summary for the cluster, topology, supervisor
@@ -448,6 +476,7 @@ Storm UI provide real time performance result.
 -	Configuration for nimbus and individual topology
 
 ## How to do performance monitoring in trident?
+
 You use the same Storm UI for viewing performance.
 Trident automatically convert your workflow into bolts and spouts
 
@@ -457,9 +486,10 @@ Trident automatically convert your workflow into bolts and spouts
 A trident "spout" is actually a storm bolt.
 
 ## How do we log in storm?
+
 Storm topologies and topology components should use the [slf4j]( http://www.slf4j.org/) API for logging.
 
-1.	Add mvn dependency to slf4j
+1. Add mvn dependency to slf4j
 
 ```
   <dependency>
@@ -469,7 +499,7 @@ Storm topologies and topology components should use the [slf4j]( http://www.slf4
   </dependency>
 ```
 
-2.	Add logging code in your Bolt/Spout class:
+2. Add logging code in your Bolt/Spout class:
 
 ``` java
 Logger logger = (Logger) LoggerFactory.getLogger(MyBolt.class);
@@ -478,14 +508,21 @@ logger.info("My Log String");
 
 ## How to view logs in storm?
 Steps:
+
 1.	Log in to the head node
+
 2.	Start stormUI
+
 3.	Click on your topology
+
 4.	Click on your spout or bolt
+
 5.	Click on the port for an executors
+
 6.	You should see the log result
 
 ## How to disable logging in storm?
+
 Storm has its own logging. By default, logging is enabled.  
 To disable logging:
 
@@ -493,7 +530,6 @@ To disable logging:
 TopologyBuilder builder = new TopologyBuilder();
 builder.setSpout(..);
 builder.setBolt(..);
-
 Config conf = new Config();
 conf.put(Config.TOPOLOGY_DEBUG, false);
 LocalCluster cluster = new LocalCluster();
@@ -504,8 +540,11 @@ cluster.submitTopology("topologyName", conf, builder.createTopology());
 ## How to install and run Redis on windows?
 
 1.	Download [Redis on Windows]( https://github.com/MSOpenTech/redis)
+
 2.	Start visual studio and open the redis-2.8\msvs\RedisServer.sln
+
 3.	Build the solution
+
 4.	start the program
 
 ## How to include Redis jar to maven?
@@ -522,6 +561,7 @@ Add the following dependency to your POM
 ## How to connect to Azure Redis Cache from java
 
 1.	Clone Java’s [Jedis Fork with support to SSL](https://github.com/RedisLabs/jedis)
+
 2.	Run:
 
 ```
