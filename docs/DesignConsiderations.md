@@ -1,45 +1,62 @@
-# Design Considerations for Data Pipeline Guidance (with Apache Storm) and Technical How-To
+# Design Considerations and Technical How-To
 
-**Note: this is an unfinished draft.**
-
+# Requirement Decisions
 ## Business Scenario: Store Event Hub Messages to Microsoft Azure Blob
 
-Connected cars send their status (diagnosis code) to event hub together with their location (latitude and longitude) and time stamp. We want to combine those status information and store them in Microsoft Azure blob.
+Connected cars send their status (diagnosis code) to event hub along with their locations (latitude and longitude) and time stamp. We want to combine those status information and store them in Microsoft Azure blob.
+
+
+``` java
+class Event
+{
+  string id;
+  double lat;
+  double lng;
+  long time;
+  string code;
+}
+```
+
+and we want to read messages from event hub and store in the event hub like the following:
+
+{"id":"6","lat":-23.0,"lng":-101.0,"time":635592916706898269,"code":"313"}
+{"id":"14","lat":-25.0,"lng":-118.0,"time":635592916706898269,"code":"311"}
+{"id":"15","lat":24.0,"lng":-58.0,"time":635592916706908297,"code":"327"}
+{"id":"979","lat":-13.0,"lng":-110.0,"time":635592916731418392,"code":"326"}
 
 ## Batching
 
-If we don’t need batching, we can use regular storm spouts and bots.
-If we need batching, we should consider using Trident.
+If we don’t need batching, we can use regular storm spouts and bots. If we need batching, we should consider using Trident since it is batch based. since we need to group messages in to azure blocks, batching makes sense.
 
 ## Dropped messages
 
-If dropped messages is allowed, we can use non-transactional spout, which will not replay when messages processing fails. In that case, some messages will not be stored in Azure blob.
-If dropped messages is not allowed, we need at-least-once guarantee of message processing.  We can considering using a transactional or opaque transactional spout, which can replay the messages if process fails.
+If dropped messages is allowed, we can use non-transactional spout, which will not replay when messages processing fails. In that case, some messages will not be stored in Azure blob. If dropped messages is not allowed, we need **at-least-once** scenario of message processing.  We can considering using a transactional or opaque transactional spout, which can replay the messages if messages processing fails.
 
-## Duplicated Messages in at-least-once semantics
+## Duplicated Messages
 
-If we can tolerate dups, don’t need batching, but want to guarantee at-least-once process, use Storm’s reliability capabilities.   We must tell Storm when new edges in a tuple tree are being created and tell Storm whenever we have finished processing an individual tuple. These are done using the OutputCollector object that bolts use to emit tuples. Anchoring is done in the emit method, and we declare that we are finished with a tuple using the ack method.
-If duplicated messages are allowed, but we need batching, we can use transactional or opaque transactional trident spout and don’t need any additional logic to handle the replay. The replay will be handled the same way as the first play.
+If we can tolerate duplicated messages to be stored in azure blobs, we can achieve at-least-once scenario with batching or without batching.
 
-## De-duplication logic in exactly-once semantics
+- at-least-once scenario without batching: We can use Storm’s reliability capabilities. We must tell Storm when new edges in a tuple tree are being created and tell Storm whenever we have finished processing an individual tuple. These can be done using the OutputCollector object that bolts use to emit tuples. Anchoring is done in the emit method, and we declare that we are finished with a tuple using the ack method.
 
-If we use Trident transactional or opaque transactional spout, we can be sure that the state updates ordered among batches (i.e. the state updates for batch 3 won’t be applied until the state updates for batch 2 have succeeded). If the state updates for batch 2 failed, batch 2 will be replayed.
-However, the replay only guarantees at-least-once processing of the messages. It up to us to implement the de- duplication logic during a replay.
+- at-least-once scenario with batching: We can use transactional or opaque transactional trident spout and don’t need any additional logic to handle the replay. If a transaction fails, the Trident will replay the batch. When processing the replay, some message will be stored in azure blobs again and result in duplication or multiple entry for the same message.
 
-## How do we know whether we are handing a batch the first time or we are inside a replay?
+## De-duplication
+
+If we use Trident transactional or opaque transactional spout, we can be sure that the state updates ordered among batches (i.e. the state updates for batch 4 won’t be applied until the state updates for batch 3 have succeeded). If the state updates for batch 3 failed, batch 3 will be replayed. However, the replay only guarantees at-least-once scenario. It up to us to implement the de-duplication logic during a replay. To implement that, we need to first figure out whether we are in the replay or not when processing a batch.
+
+## How do we know if we are inside a replay?
 
 If we are using Trident, we can get the **TransactionId** from **TransactionAttempt** object, which is passed in as an Object in the **Aggregator** init method.  During a replay, the value of TransactionId will be the same as the that of the previous batch.  If we save the previous TransactionId, all we need to do if to compare the current value with the saved value. If the value is the same, we are inside a replay. If there are different, we are inside a fresh new batch.
 
-## What is the schema for the message used in iot sample?
-Json message sample:
-{"timeStamp":1414699817193,"deviceid":"some_quid_string","latitude":200000,"longitude":300000,"altitude":500000,"heading":400000,"fixType":0,"speed":0}
 # Strorm vs Trident
+
 ## Should we use a Storm topology or Trident topology?
 
-A Storm structure for distributed computation is called topology.  A topology consists of stream of data, spouts that produce the data, and bots that process the data. Storm topologies run forever, until explicitly killed.
+A Storm structure is called topology.  A topology consists of stream of data, spouts that produce the data, and bots that process the data. Storm topologies run forever, until explicitly killed.
 
-Trident is a high-level abstraction for doing real time computing on top of Storm. Trident process messages in batches and it consists of joins, aggregations, grouping, functions, and filters. Trident support exactly-once semantics.
-The core scenario is to aggregate individual messages in to an Azure block, the batching feature provided by Trident make it a good choice. We can simply aggregate a batch into a block if the batch can fits. If a batch is bigger than the max size of a block, we can simply split the batch up in to several blocks. The only limitation is that when the batch is smaller than a block, in which case, the block will not be filled up unless we add more customer logic to handle combining multiple batches into a single block.
+Trident is a high-level abstraction on top of Storm. Trident process messages in batches and it consists of joins, aggregations, grouping, functions, and filters. Trident support exactly-once semantics.
+
+Sincne the core business scenario for the reference implementation is to aggregate individual messages into an Azure block, the batching feature provided by Trident makes it a good choice. We can simply aggregate a batch into a block if the batch can fits. If a batch is bigger than the max size of a block, we can split the batch up in to several blocks. The only limitation is that when the batch is smaller than a block, in which case, the block will not be filled up with its max size.
 
 ## What are built-in stream groupings in Storm and what kind of grouping do we need for our scenario?
 Storm has seven built-in stream groupings:
@@ -66,8 +83,8 @@ There are five kinds of operations in Trident:
 We want to messages in each partition to be aggregated and stored in its corresponding Azure blobs. So we should pick the first one: Operations that apply locally to each partition and cause no network transfer.
 
 ## What are Partition-local Operations in Trident?
-Partition-local operations involve no network transfer and are applied to each batch partition independently. They include **Functions**, **Filters**, and **partitionAggregate**.
-To support the exact once semantics, we need to know whether we are in the replay, whether all the tuples in a batch are processed. We decide to use the most general interface: **Aggregator""
+Partition-local operations involve no network transfer and are applied to each batch partition independently. They include **Functions**, **Filters**, and **partitionAggregate (Aggregator)**.
+To support the exactly-once semantics, we need to know whether we are in a replay, whether all the tuples in a batch are processed. We decide to use the most general interface: **Aggregator""
 
 ## What is an Trident Aggregator and why it fits our needs?
 The most general interface for performing aggregations is Aggregator, which looks like this:
@@ -84,8 +101,11 @@ Aggregators can emit any number of tuples with any number of fields. They can em
 1.  The init method is called before processing the batch.
 2.  The aggregate method is called for each input tuple in the batch partition.
 3.  The complete method is called when all tuples for the batch partition have been processed by aggregate.
+
+# Implementation Detail
+
 ## What’s the implementation of ByteAggregator?
-Let's call our aggregator ByteAggregator, we can extends the BaseAggregator instead of directly implemenat the Aggregator interface:
+Let's call the aggregator in  the reference implementation ByteAggregator, we can extend the BaseAggregator instead of directly implemenat the Aggregator interface:
 
 ``` java
 public class ByteAggregator extends BaseAggregator<T>
@@ -94,29 +114,31 @@ public class ByteAggregator extends BaseAggregator<T>
 The following code shows a stripped-down implementation of ByteAggregator:
 
 ``` java
-public class ByteAggregator extends BaseAggregator<BlockState> {
+public class ByteAggregator extends BaseAggregator<BlockList> {
   private long txid;
   private int partitionIndex;
-  private Properties properties;
-  public ByteAggregator(Properties properties) {
-    this.properties = properties;
-  }
-  @Override
+
   public void prepare(@SuppressWarnings("rawtypes") Map conf,TridentOperationContext context) {
     this.partitionIndex = context.getPartitionIndex();
-    super.prepare(conf, context);
   }
-  public BlockState init(Object batchId, TridentCollector collector) {
+
+  public BlockList init(Object batchId, TridentCollector collector) {
     this.txid = ((TransactionAttempt) batchId).getTransactionId();
-    BlockState state = new BlockState(this.partitionIndex, this.txid,this.properties);
-    return state;
+    Blocklist blockList = new Blocklist(this.partitionIndex, this.txid,this.properties);
+    return blockList;
   }
-  public void aggregate(BlockState state, TridentTuple tuple,TridentCollector collector) {
-    state.block.addData(tuple.getString(0));
+
+  public void aggregate(BlockList blockList, TridentTuple tuple,TridentCollector collector) {
+    String msg = tuple.getString(0) + "\r\n";
+    if (blockList.currentBlock.willMessageFitCurrentBlock(msg)) {
+        blockList.currentBlock.addData(msg);
+    } else {
+        blockList.currentBlock.upload();
+    }
   }
-  public void complete(BlockState state, TridentCollector collector) {
-    state.persist();
-    collector.emit(new Values(1));
+
+  public void complete(BlockList blockList, TridentCollector collector) {
+    blockList.persist();//persist blockList ids, txid, partitionid to support roll back
   }
 }
 ```
@@ -124,11 +146,12 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 Here are the key point of ByteAggregate class:
 1. paritionIndex is retrieved in the the prepare method, which is defined in the operation interface. prepare is called once for each partition when the topology starts.
 2. txid is retrieved in the init method, which get called by the Trident before processing each batch.
-3. tuple string is added into to the block data in aggregate method.
-4. the state is persisted in the complete method.
+3. tuple string is added into to the block data in aggregate method. When a block is filled up, it is uploaded to Azure storage.
+4. the blockList is persisted in the complete method, which stores partitionid, transactionid, blockname, and blockids to Redis cache. In case next replay, those blocks that are uploaded to Azure storage will be over written to remove the duplication. If next batch is not a replay, the previous uploaded blocks will be permanent.
+
+# Techinical How-To
 
 ## How to create a Storm or Trident project?
-
 
 Run
 
@@ -150,8 +173,6 @@ mvn clean package
 
 For Strom topology, add java class for spout, bolt, and topology. In case of a Trident topology, add java class for operations. Add class to build the topology, and press F11 to test locally (in Eclipse) or deploy jar file to a storm headnote.
 
-# Working with Event Hub spout
-
 ## How to send event to Event Hub?
 We decided to develop the emulator for send event to event hub based on:
 [Analyzing sensor data with Storm and HBase in HDInsight (Hadoop)](http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-sensor-data-analysis/)
@@ -163,10 +184,11 @@ The following is the GitHub repo for it:
 Yes. [Analyzing sensor data with Storm and HBase in HDInsight (Hadoop)](http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-sensor-data-analysis/) has the sample code for using storm spout for event hub.
 ## How to use the eventhub spout included in the HDI Storm in your java program?
 Here are the steps:
-•	Copy the jar file C:\apps\dist\storm-0.9.1.2.1.6.0-2103\examples\eventhubspout\eventhubs-storm-spout-0.9-jar-with-dependencies.jar from the HDI storm head node to your development PC.
-•	Add that jar file to the local maven repo:
+
+- Copy the jar file C:\apps\dist\storm-0.9.1.2.1.6.0-2103\examples\eventhubspout\eventhubs-storm-spout-0.9-jar-with-dependencies.jar from the HDI storm head node to your development PC.
+-	Add that jar file to the local maven repo:
 mvn install:install-file -Dfile=eventhubs-storm-spout-0.9-jar-with-dependencies.jar -DgroupId=com.microsoft.eventhubs -DartifactId=eventhubs-storm-spout -Dversion=0.9 -Dpackaging=jar
-•	Add the jar to the pom:
+-	Add the jar to the pom:
 
 ```
 <dependency>
@@ -176,7 +198,7 @@ mvn install:install-file -Dfile=eventhubs-storm-spout-0.9-jar-with-dependencies.
 </dependency>
 ```
 
-•Enable distribution of the jar file by adding the following to the pom after ```<build><plugins>```:
+- Enable distribution of the jar file by adding the following to the pom after ```<build><plugins>```:
 
 
 ```
@@ -209,14 +231,17 @@ mvn install:install-file -Dfile=eventhubs-storm-spout-0.9-jar-with-dependencies.
 
 ## Is there an existing implementation of trident transactional spout for event hub?
 The storm cluster headnode C:\apps\dist\storm-0.9.1.2.1.6.0-2103\examples\eventhubspout\eventhubs-storm-spout-0.9-jar-with-dependencies.jar consists of two trident spout
-•	OpaqueTridentEventHubSpout
-•	TransactionalTridentEventHubSpout
+-	OpaqueTridentEventHubSpout
+-	TransactionalTridentEventHubSpout
+
 ## How many instances of spout should I have?
 The number of spout should be equal to the number of event hub partitions.
+
 ```
 EventHubSpoutConfig spoutConfig = new EventHubSpoutConfig(…,eventHubPartitionCount,…);
 OpaqueTridentEventHubSpout spout = new OpaqueTridentEventHubSpout(spoutConfig);
 ```
+
 ## How to configure the topology so that each partitioned aggregate will read from its corresponding spout?
 
 The number of workers (partitioned aggregate) should be equal to the Event Hub Partition Count.
@@ -230,8 +255,10 @@ inputStream.parallelismHint(numWorkers).partitionAggregate(new Fields("message")
 ```
 
 Currently we automatically assign partitions to tasks depending on task ID. E.g. task 0 receive from partition 0, task 1 receive from partition 1 etc. For trident this is the only supported assignment scheme.
+
 ## The event hub has 8 partitions. Can I configure my trident topology to have 8 tasks (instances) of the spout?
 Yes, actually you can only set the number of tasks to a value between 1 to 8 if your event hub have 8 partitions. We recommend set the number of tasks to the number of partitions.
+
 ## Can I configure/modify the spout to emit the partition id with each tuple?
 No.  You cannot at this moment.
 
@@ -239,6 +266,7 @@ No.  You cannot at this moment.
 
 ## How to get transaction id in trident code?
 You can get the transaction ID in the init method of Aggregator.
+
 ``` java
 public T init(Object batchId, TridentCollector collector) {
   if (batchId instanceof TransactionAttempt) {
@@ -269,10 +297,13 @@ catch (Exception e) {
     throw new FailedException(e.getMessage());
 }
 ```
+
 # Write and append to azure blob
 
 ## How to Convert azure blob url to wasb
+
 Blob url:  http:// mystorage.blob.core.windows.net/mycontainer/folder/file.txt
+
 WASB:    wasb://mycontainer@mystorage.blob.core.windows.net/folder/file.txt
 
 ## How to write to Azure blob in java?
@@ -284,6 +315,7 @@ add pom dependency:
 ```
 
 Java Code:
+
 ``` java
   Configuration conf = new Configuration();
   FileSystem hdfs = FileSystem.get(conf);
@@ -292,10 +324,11 @@ Java Code:
   byte[] bytes = "test data".getBytes();
   stream.write(bytes);
   stream.close();
-``` java
+```
 
 
-## Can I use hdfs.append(path) to append to azure blob in a java?
+## Can I use hdfs.append(path) to append to azure blob in a java as shown in the following code?
+
 
 ``` java
   Configuration conf = new Configuration();
@@ -310,24 +343,21 @@ Java Code:
 The above code will not work for the Azure blob. It only works if the path point to HDFS file system
 
 ## Any existing bolt that can write/append to azure blob with a given size?
+
 There is an open source bolt storm-hdfs that can write/append to hdfs:
-•	Git repo: https://github.com/ptgoetz/storm-hdfs
-•	Also available at head node
+-	Git repo: https://github.com/ptgoetz/storm-hdfs
+-	Also available at head node
+
 The following example will write pipe("|")-delimited files to the HDFS path hdfs://localhost:54310/foo. After every 1,000 tuples it will sync filesystem, making that data visible to other HDFS clients. It will rotate files when they reach 5 megabytes in size.
 
 ``` java
 // use "|" instead of "," for field delimiter
-RecordFormat format = new DelimitedRecordFormat()
-        .withFieldDelimiter("|");
-
+RecordFormat format = new DelimitedRecordFormat().withFieldDelimiter("|");
 // sync the filesystem after every 1k tuples
 SyncPolicy syncPolicy = new CountSyncPolicy(1000);
-
 // rotate files when they reach 5MB
 FileRotationPolicy rotationPolicy = new FileSizeRotationPolicy(5.0f, Units.MB);
-
-FileNameFormat fileNameFormat = new DefaultFileNameFormat()
-        .withPath("/foo/");
+FileNameFormat fileNameFormat = new DefaultFileNameFormat().withPath("/foo/");
 
 HdfsBolt bolt = new HdfsBolt()
         .withFsUrl("hdfs://headnodehost:9000")
@@ -340,10 +370,12 @@ HdfsBolt bolt = new HdfsBolt()
 However, the sample is for hdfs. For wasb, .withFsUrl("wasb://hanzstorm2@hanzstorage1.blob.core.windows.net/aaastorm2")
 It throws Exception: java.lang.RuntimeException: Error preparing HdfsBolt: No FileSystem for scheme: wasb at org.apache.storm.hdfs.bolt.AbstractHdfsBolt.prepare(AbstractHdfsBolt.java:96) at backtype.storm.daemon.execu
 
-## How do Icopy files in hdfs://headnodehost:9000 to local file system in hadoop?
+## How do I copy files in hdfs://headnodehost:9000 to local file system in hadoop?
+
+```
 Hdfs dfs –fs hdfs://headnodehost:9000 –ls /
 Hdfs dfs –fs hdfs://headnodehost:9000 –copyToLocal /foo/*.txt c:/temp
-
+```
 
 ## How do I to provision storm cluster with append to hdfs enabled?
 You cannot use the azure portal to provision an hdinsight cluster with dfs.support.append to true. But you can use powershell to do that:
@@ -364,6 +396,8 @@ Sample PowerShell script :
 # 1. Ensure to install and Configure Windows Azure PowerShell from:
 # http://azure.microsoft.com/en-us/documentation/articles/install-configure-powershell/
 Add-AzureAccount
+
+```
 $ClusterName = "myclustername"
 $DefaultContainerName = $ClusterName
 $ClusterLocation = "West US"
@@ -389,13 +423,18 @@ New-AzureHDInsightCluster -Name $ClusterName -Config $Config -Location $ClusterL
 1.	Create myStormApp.jar file that includes the topology and dependencies
 2.	Copy myStormApp.jar to the HdInsight storm head node
 3.	Start storm command line and run:
+
 ```
 storm jar myStormApp.jar  com.mycompany.myStormApp1.MyTopology InstanceName
 storm jar c:\hanz-1.0.jar storm.blueprints.chapter1.v1.StormhdfsTopology stormhdfs
 storm jar c:\ TemperatureMonitor.jar  com.microsoft.examples.Temperature temp
 ```
+
 To Stop storm command:
+
+```
 Storm kill wordcount
+```
 
 # Logging and Performance Monitoring with Storm
 ## How to do performance monitoring in storm?
@@ -403,19 +442,25 @@ Storm UI provide real time performance result.
 1.	Connect to storm head node
 2.	Start Storm UI
 3.	We can see:
-•	perf summary for the cluster, topoloty, supervisor
-•	Individual topolog, spouts, bolts,
-•	Configuration for nimbus and indidual topology
+
+-	perf summary for the cluster, topology, supervisor
+-	Individual topology, spouts, bolts,
+-	Configuration for nimbus and individual topology
+
 ## How to do performance monitoring in trident?
 You use the same Storm UI for viewing performance.
 Trident automatically convert your workflow into bolts and spouts
-MasterBatchCoordinator: generic for all trident topologies;
-spout coordinator: specific to your type of spout.
+
+- MasterBatchCoordinator: generic for all trident topologies;
+- spout coordinator: specific to your type of spout.
+
 A trident "spout" is actually a storm bolt.
 
 ## How do we log in storm?
 Storm topologies and topology components should use the [slf4j]( http://www.slf4j.org/) API for logging.
+
 1.	Add mvn dependency to slf4j
+
 ```
   <dependency>
     <groupId>org.slf4j</groupId>
@@ -423,7 +468,9 @@ Storm topologies and topology components should use the [slf4j]( http://www.slf4
     <version>1.7.7</version>
   </dependency>
 ```
+
 2.	Add logging code in your Bolt/Spout class:
+
 ``` java
 Logger logger = (Logger) LoggerFactory.getLogger(MyBolt.class);
 logger.info("My Log String");
@@ -441,6 +488,7 @@ Steps:
 ## How to disable logging in storm?
 Storm has its own logging. By default, logging is enabled.  
 To disable logging:
+
 ``` java
 TopologyBuilder builder = new TopologyBuilder();
 builder.setSpout(..);
@@ -453,14 +501,14 @@ cluster.submitTopology("topologyName", conf, builder.createTopology());
 ```
 
 # Use Azure Redis Cache in java
-## How to install and run redis on windows?
+## How to install and run Redis on windows?
 
 1.	Download [Redis on Windows]( https://github.com/MSOpenTech/redis)
 2.	Start visual studio and open the redis-2.8\msvs\RedisServer.sln
 3.	Build the solution
 4.	start the program
 
-## How to include redis jar to maven?
+## How to include Redis jar to maven?
 Add the following dependency to your POM
 
 ```
@@ -470,7 +518,6 @@ Add the following dependency to your POM
   <version>2.6.0</version>
 </dependency>
 ```
-
 
 ## How to connect to Azure Redis Cache from java
 
