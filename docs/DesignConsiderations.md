@@ -489,7 +489,7 @@ A trident "spout" is actually a storm bolt.
 
 Storm topologies and topology components should use the [slf4j]( http://www.slf4j.org/) API for logging.
 
-1. Add mvn dependency to slf4j
+Add mvn dependency to slf4j
 
 ```
   <dependency>
@@ -499,7 +499,7 @@ Storm topologies and topology components should use the [slf4j]( http://www.slf4
   </dependency>
 ```
 
-2. Add logging code in your Bolt/Spout class:
+Add logging code in your Bolt/Spout class:
 
 ``` java
 Logger logger = (Logger) LoggerFactory.getLogger(MyBolt.class);
@@ -560,15 +560,15 @@ Add the following dependency to your POM
 
 ## How to connect to Azure Redis Cache from java
 
-1.	Clone Java’s [Jedis Fork with support to SSL](https://github.com/RedisLabs/jedis)
+- Clone Java’s [Jedis Fork with support to SSL](https://github.com/RedisLabs/jedis)
 
-2.	Run:
+- Run:
 
 ```
 mvn install -Dmaven.test.skip=true
 ```
 
-3.	Add the following to you pom
+- Add the following to you pom
 
 ```
 <dependency>
@@ -578,7 +578,7 @@ mvn install -Dmaven.test.skip=true
 </dependency>
 ```
 
-4.	Java Test Code:
+- Java Test Code:
 
 ``` java
   public static void main(String[] args) {
