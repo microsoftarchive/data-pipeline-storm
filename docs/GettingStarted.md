@@ -206,10 +206,6 @@ bin\storm jar eventhub-blobwriter-1.0-SNAPSHOT.jar com.contoso.app.trident.BlobW
 - To verify that the message are uploaded to azure blob.
 Start [Azure Storage Explorer](https://azurestorageexplorer.codeplex.com/). Click **refresh** button and then click on the container for the uploaded blobs.
 
-- Note: to restart the topology, you need to delete the existing blobs. A simple way is just delete the container each time you start the topology.
-
-
-
 - To stop the topology, go to the Remote Desktop session with the Storm cluster and enter the following in the HDInsight Command Line.
 
 ```
