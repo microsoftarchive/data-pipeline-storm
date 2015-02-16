@@ -3,6 +3,10 @@
 package com.contoso.app.trident;
 
 import java.io.IOException;
+import java.sql.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -11,9 +15,12 @@ import org.slf4j.LoggerFactory;
 public final class ConfigProperties {
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(ConfigProperties.class);
 	private static final Properties properties = new Properties();
+	private static String containerName = null;
+
 	static {
 		try {
 			properties.load(ConfigProperties.class.getClassLoader().getResourceAsStream("Config.properties"));
+			intContainerName();
 		} catch (IOException e) {
 			throw new ExceptionInInitializerError(e);
 		}
@@ -40,6 +47,18 @@ public final class ConfigProperties {
 		}
 
 		return maxNumberOfBlocks;
+	}
+
+	public static String getContainerName() {
+		return containerName;
+	}
+
+	private static void intContainerName() {
+		if (containerName == null) {
+			DateFormat df = new SimpleDateFormat("-yyyy-MM-dd-HH-mm-ss");
+			Calendar calobj = Calendar.getInstance();
+			containerName = ConfigProperties.getProperty("storage.blob.account.container") + df.format(calobj.getTime());
+		}
 	}
 
 	public static int getMaxBlockBytes() {

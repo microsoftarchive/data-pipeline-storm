@@ -36,7 +36,8 @@ public class BlobWriter {
 
 			String accountName = ConfigProperties.getProperty("storage.blob.account.name");
 			String accountKey = ConfigProperties.getProperty("storage.blob.account.key");
-			String containerName = ConfigProperties.getProperty("storage.blob.account.container");
+			//String containerName = ConfigProperties.getProperty("storage.blob.account.container");
+			String containerName = ConfigProperties.getContainerName();
 			String connectionStrFormatter = "DefaultEndpointsProtocol=http;AccountName=%s;AccountKey=%s";
 			String connectionStr = String.format(connectionStrFormatter, accountName, accountKey);
 
