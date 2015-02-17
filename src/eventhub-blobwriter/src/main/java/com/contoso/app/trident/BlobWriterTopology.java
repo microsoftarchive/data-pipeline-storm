@@ -1,5 +1,4 @@
 // Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
-
 package com.contoso.app.trident;
 
 import backtype.storm.Config;
@@ -13,7 +12,6 @@ import storm.trident.Stream;
 import storm.trident.TridentTopology;
 
 public class BlobWriterTopology {
-
 	public static void main(String[] args) throws Exception {
 		boolean isLocalCluster = true;
 		String topologyName = "localTopology";
@@ -39,14 +37,14 @@ public class BlobWriterTopology {
 	}
 
 	static StormTopology buildTopology(String topologyName) {
-		Redis.flushDB();
+		BlobWriterState.flush();
 		TridentTopology tridentTopology = new TridentTopology();
 		Stream inputStream = null;
 
 		EventHubSpoutConfig spoutConfig = readConfig();
 		spoutConfig.setTopologyName(topologyName);
 		OpaqueTridentEventHubSpout spout = new OpaqueTridentEventHubSpout(spoutConfig);
-		inputStream = tridentTopology.newStream("message", spout);//the OpaqueTridentEventHubSpout emits events called "message"
+		inputStream = tridentTopology.newStream("message", spout);// the OpaqueTridentEventHubSpout emits events called "message"
 		int numWorkers = Integer.parseInt(ConfigProperties.getProperty("eventhubspout.partitions.count"));
 		inputStream.parallelismHint(numWorkers).partitionAggregate(new Fields("message"), new ByteAggregator(), new Fields("notused"));
 		return tridentTopology.build();

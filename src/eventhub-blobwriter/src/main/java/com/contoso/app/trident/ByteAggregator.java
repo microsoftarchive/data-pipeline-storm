@@ -18,7 +18,6 @@ import storm.trident.tuple.TridentTuple;
 
 @SuppressWarnings("unused")
 public class ByteAggregator extends BaseAggregator<BlockList> {
-
 	private static final long serialVersionUID = 1L;
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(ByteAggregator.class);
 
@@ -73,7 +72,7 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 		String tupleStr = tuple.getString(0);
 		if (tupleStr != null && tupleStr.length() > 0) {
 			String msg = tupleStr + "\r\n";
-			if (blockList.currentBlock.isMessageSizeWithnLimit(msg)) {
+			if (Block.isMessageSizeWithnLimit(msg)) {
 				if (blockList.currentBlock.willMessageFitCurrentBlock(msg)) {
 					blockList.currentBlock.addData(msg);
 				} else {

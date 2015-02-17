@@ -251,9 +251,9 @@ eventhubs-storm-spout reads configuration information from a Config.properties f
 - Create a new file LogSetting.java in directory \eventhub-blobwriter\src\main\java\com\contoso\app\trident\
 - Copy the content from the cloned file to the above file.
 
-### Add Redis class to support reading/writing from Azure Redis Cache
+### Add BlobWriterState class to support reading/writing on Azure Redis Cache
 
-- Create a new file Redis.java in directory \eventhub-blobwriter\src\main\java\com\contoso\app\trident\
+- Create a new file BlobWriterState.java in directory \eventhub-blobwriter\src\main\java\com\contoso\app\trident\
 - Copy the content from the cloned file to the above file.
 
 ## Build the project

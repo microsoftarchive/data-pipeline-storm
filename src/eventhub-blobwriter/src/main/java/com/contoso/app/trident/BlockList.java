@@ -1,7 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
-
 package com.contoso.app.trident;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -11,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("unused")
 public class BlockList {
+	private static final Logger logger = (Logger) LoggerFactory.getLogger(BlockList.class);
 	public Block currentBlock;
 	public boolean needPersist = false;
 	public String partitionTxidLogStr;
@@ -19,7 +18,6 @@ public class BlockList {
 
 	private List<String> blockList; // blockList stores a list of block id
 									// string
-	private static final Logger logger = (Logger) LoggerFactory.getLogger(BlockList.class);
 	private int partitionIndex;
 	private long txid;
 
@@ -41,7 +39,7 @@ public class BlockList {
 		String partitionBlocklistKeyStrFormat = ConfigProperties.getProperty("partitionBlocklistKeyStrFormat");
 		this.partitionBlocklistKeyStr = String.format(partitionBlocklistKeyStrFormat, partitionIndex);
 
-		String lastTxidStr = Redis.get(this.partitionTxidKeyStr);
+		String lastTxidStr = BlobWriterState.get(this.partitionTxidKeyStr);
 
 		if (lastTxidStr == null) { // the very first time the topology is running
 			this.currentBlock = getNewBlock();
@@ -122,7 +120,7 @@ public class BlockList {
 		}
 
 		Block block = new Block();
-		List<String> lastBlobidBlockidList = Redis.getList(this.partitionBlocklistKeyStr, 50000);
+		List<String> lastBlobidBlockidList = BlobWriterState.getList(this.partitionBlocklistKeyStr, 50000);
 		if (lastBlobidBlockidList != null && lastBlobidBlockidList.size() > 0) {
 			String blockStr = lastBlobidBlockidList.get(0);
 			for (String s : lastBlobidBlockidList) {
@@ -163,7 +161,7 @@ public class BlockList {
 		}
 
 		Block block = new Block();
-		List<String> lastblocks = Redis.getList(this.partitionBlocklistKeyStr, 50000);
+		List<String> lastblocks = BlobWriterState.getList(this.partitionBlocklistKeyStr, 50000);
 		if (lastblocks != null && lastblocks.size() > 0) {
 			String blockStr = lastblocks.get(0);
 			for (String s : lastblocks) {
@@ -210,9 +208,11 @@ public class BlockList {
 				logger.info("persist to redis: " + this.partitionTxidLogStr + " addToList(" + this.partitionBlocklistKeyStr + ", " + s + ")");
 			}
 		}
-
-		Redis.set(this.partitionTxidKeyStr, String.valueOf(this.txid));
-		Redis.setList(this.partitionBlocklistKeyStr, this.blockList);
+		// TODO remove dependency on Redis, make it pluggable
+		// put both lines in a transaction, make a single call
+		// Storage should have no knowledge of partitionTxidKeyStr,...
+		BlobWriterState.set(this.partitionTxidKeyStr, String.valueOf(this.txid));
+		BlobWriterState.setList(this.partitionBlocklistKeyStr, this.blockList);
 
 		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_END) {
 			logger.info(this.partitionTxidLogStr + "this.partition_tx_logStr + persistState End");

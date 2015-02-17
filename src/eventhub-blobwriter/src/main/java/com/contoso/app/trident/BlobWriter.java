@@ -1,18 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
-
 package com.contoso.app.trident;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Properties;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import backtype.storm.topology.FailedException;
-
 import com.microsoft.azure.storage.AccessCondition;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.blob.BlobRequestOptions;
@@ -26,41 +21,42 @@ import com.microsoft.azure.storage.core.Base64;
 
 @SuppressWarnings("unused")
 public class BlobWriter {
+	private static final Logger logger = (Logger) LoggerFactory.getLogger(BlobWriter.class);
+	static CloudBlobContainer container = null;
+	static {
+		try {
+			String accountName = ConfigProperties.getProperty("storage.blob.account.name");
+			String accountKey = ConfigProperties.getProperty("storage.blob.account.key");
+			String containerName = ConfigProperties.getContainerName();
+			String connectionStrFormatter = "DefaultEndpointsProtocol=http;AccountName=%s;AccountKey=%s";
+			String connectionStr = String.format(connectionStrFormatter, accountName, accountKey);
+			CloudStorageAccount account = CloudStorageAccount.parse(String.format(connectionStr, accountName, accountKey));
+			CloudBlobClient blobClient = account.createCloudBlobClient();
+			container = blobClient.getContainerReference(containerName);
+			container.createIfNotExists();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			throw new ExceptionInInitializerError(e.getMessage());
+		}
+	}
+
 	static public void upload(String blobname, String blockIdStr, String data) {
-		Logger logger = (Logger) LoggerFactory.getLogger(BlobWriter.class);
 		InputStream stream = null;
 		try {
 			if (LogSetting.LOG_BLOB_WRITER || LogSetting.LOG_METHOD_BEGIN) {
 				logger.info("upload Begin");
 			}
-
-			String accountName = ConfigProperties.getProperty("storage.blob.account.name");
-			String accountKey = ConfigProperties.getProperty("storage.blob.account.key");
-			//String containerName = ConfigProperties.getProperty("storage.blob.account.container");
-			String containerName = ConfigProperties.getContainerName();
-			String connectionStrFormatter = "DefaultEndpointsProtocol=http;AccountName=%s;AccountKey=%s";
-			String connectionStr = String.format(connectionStrFormatter, accountName, accountKey);
-
 			if (LogSetting.LOG_BLOB_WRITER) {
-				// logger.info("upload accountName = " + accountName);
-				// logger.info("upload accountKey = " + accountKey);
-				logger.info("upload containerName = " + containerName);
-				// logger.info("upload connectionStr = " + connectionStr);
 				logger.info("upload blobname = " + blobname);
 				logger.info("upload blockIdStr = " + blockIdStr);
 			}
 			if (LogSetting.LOG_BLOB_WRITER_DATA) {
 				logger.info("upload data= \r\n" + data);
 			}
-			CloudStorageAccount account = CloudStorageAccount.parse(String.format(connectionStr, accountName, accountKey));
-			CloudBlobClient _blobClient = account.createCloudBlobClient();
-			CloudBlobContainer _container = _blobClient.getContainerReference(containerName);
-			_container.createIfNotExists();
-			CloudBlockBlob blockBlob = _container.getBlockBlobReference(blobname);
+			CloudBlockBlob blockBlob = container.getBlockBlobReference(blobname);
 			BlobRequestOptions blobOptions = new BlobRequestOptions();
 			stream = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
 			BlockEntry newBlock = new BlockEntry(Base64.encode(blockIdStr.getBytes()), BlockSearchMode.UNCOMMITTED);
-
 			ArrayList<BlockEntry> blocksBeforeUpload = new ArrayList<BlockEntry>();
 			if (blockBlob.exists(AccessCondition.generateEmptyCondition(), blobOptions, null)) {
 				blocksBeforeUpload = blockBlob.downloadBlockList(BlockListingFilter.COMMITTED, null, blobOptions, null);
@@ -77,12 +73,10 @@ public class BlobWriter {
 					logger.info("BlockEntry Before Upload id=" + id + ", Index = " + i + " --last before");
 				}
 			}
-
 			blockBlob.uploadBlock(newBlock.getId(), stream, -1);
 			if (!blocksBeforeUpload.contains(newBlock)) {
 				blocksBeforeUpload.add(newBlock);
 			}
-
 			if (LogSetting.LOG_BLOB_WRITER_BLOCKLIST_AFTER_UPLOAD) {
 				int i = 0;
 				String id = null;
@@ -95,7 +89,6 @@ public class BlobWriter {
 					logger.info("BlockEntry After Upload id=" + id + ", Index = " + i + " --last after");
 				}
 			}
-
 			blockBlob.commitBlockList(blocksBeforeUpload);
 		} catch (Exception e) {
 			throw new FailedException(e.getMessage());
@@ -104,7 +97,7 @@ public class BlobWriter {
 				try {
 					stream.close();
 				} catch (Exception e) {
-					logger.info("failed to close the stream that upload to azrue blob");
+					logger.error("failed to close the stream that upload to azrue blob");
 				}
 			}
 		}
