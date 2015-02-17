@@ -63,9 +63,9 @@ namespace SendEvents
                         tasks.Add(client.SendAsync(data));
                     }
                     //Thread.Sleep(1000);
+                    Task.WaitAll(tasks.ToArray());
+                    tasks.Clear();
                 };
-
-                Task.WaitAll(tasks.ToArray());
             }
             catch (Exception exp)
             {

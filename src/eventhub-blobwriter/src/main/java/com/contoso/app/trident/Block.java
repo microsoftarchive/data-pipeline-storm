@@ -14,7 +14,7 @@ public class Block {
 	public String blobname;
 	public String blockidStr;
 	public String blockdata;
-	int maxBlockBytes = ConfigProperties.getMaxBlockBytes();
+	static int maxBlockBytes = ConfigProperties.getMaxBlockBytes();
 
 	public Block() {
 		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
@@ -42,7 +42,7 @@ public class Block {
 		}
 	}
 
-	public boolean isMessageSizeWithnLimit(String msg) {
+	public static boolean isMessageSizeWithnLimit(String msg) {
 		if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_BEGIN) {
 			logger.info("Block.isMessageSizeWithnLimit Begin");
 		}

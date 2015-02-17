@@ -54,6 +54,8 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 
 		if (batchId instanceof TransactionAttempt) {
 			this.txid = ((TransactionAttempt) batchId).getTransactionId();
+		}else{
+			throw new FailedException("Error configuring ByteAggregator");
 		}
 		BlockList blockList = new BlockList(this.partitionIndex, this.txid);
 
@@ -98,7 +100,7 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 				}
 			} else {
 				// message size is not within the limit, skip the message
-				logger.info(blockList.partitionTxidLogStr + "message skiped: message size exceeds the size limit, message= " + tupleStr);
+				logger.error(blockList.partitionTxidLogStr + "message skiped: message size exceeds the size limit, message= " + tupleStr);
 			}
 		}
 
