@@ -15,19 +15,15 @@ public class BlobWriterTopology {
 	public static void main(String[] args) throws Exception {
 		boolean isLocalCluster = true;
 		String topologyName = "localTopology";
-
 		if ((args != null) && (args.length > 0)) { // if running in storm cluster, the first argument is the topology name
 			topologyName = args[0];
 			isLocalCluster = false;
 		}
-
 		int numWorkers = Integer.parseInt(ConfigProperties.getProperty("eventhubspout.partitions.count"));
 		Config config = new Config();
 		config.setNumWorkers(numWorkers);
 		config.setMaxTaskParallelism(numWorkers);
-
 		StormTopology stormTopology = buildTopology(topologyName);
-
 		if (isLocalCluster) {
 			LocalCluster localCluster = new LocalCluster();
 			localCluster.submitTopology(topologyName, config, stormTopology);
@@ -40,14 +36,12 @@ public class BlobWriterTopology {
 		BlobWriterState.flush();
 		TridentTopology tridentTopology = new TridentTopology();
 		Stream inputStream = null;
-
 		EventHubSpoutConfig spoutConfig = readConfig();
 		spoutConfig.setTopologyName(topologyName);
 		OpaqueTridentEventHubSpout spout = new OpaqueTridentEventHubSpout(spoutConfig);
 		inputStream = tridentTopology.newStream("message", spout);// the OpaqueTridentEventHubSpout emits events called "message"
 		int numWorkers = Integer.parseInt(ConfigProperties.getProperty("eventhubspout.partitions.count"));
-		// TODO: emit message count
-		inputStream.parallelismHint(numWorkers).partitionAggregate(new Fields("message"), new ByteAggregator(), new Fields("notused"));
+		inputStream.parallelismHint(numWorkers).partitionAggregate(new Fields("message"), new ByteAggregator(), new Fields("msgCount"));
 		return tridentTopology.build();
 	}
 

@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import backtype.storm.topology.FailedException;
@@ -19,7 +18,6 @@ import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
 import com.microsoft.azure.storage.core.Base64;
 
-@SuppressWarnings("unused")
 public class BlobWriter {
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(BlobWriter.class);
 	static CloudBlobContainer container = null;
@@ -43,14 +41,10 @@ public class BlobWriter {
 	static public void upload(String blobname, String blockIdStr, String data) {
 		InputStream stream = null;
 		try {
-			if (LogSetting.LOG_BLOB_WRITER || LogSetting.LOG_METHOD_BEGIN) {
+			if (LogSetting.LOG_BLOBWRITER) {
 				logger.info("upload Begin");
-			}
-			if (LogSetting.LOG_BLOB_WRITER) {
 				logger.info("upload blobname = " + blobname);
 				logger.info("upload blockIdStr = " + blockIdStr);
-			}
-			if (LogSetting.LOG_BLOB_WRITER_DATA) {
 				logger.info("upload data= \r\n" + data);
 			}
 			CloudBlockBlob blockBlob = container.getBlockBlobReference(blobname);
@@ -61,7 +55,7 @@ public class BlobWriter {
 			if (blockBlob.exists(AccessCondition.generateEmptyCondition(), blobOptions, null)) {
 				blocksBeforeUpload = blockBlob.downloadBlockList(BlockListingFilter.COMMITTED, null, blobOptions, null);
 			}
-			if (LogSetting.LOG_BLOB_WRITER_BLOCKLIST_BEFORE_UPLOAD) {
+			if (LogSetting.LOG_BLOBWRITER) {
 				int i = 0;
 				String id = null;
 				for (BlockEntry e : blocksBeforeUpload) {
@@ -77,7 +71,7 @@ public class BlobWriter {
 			if (!blocksBeforeUpload.contains(newBlock)) {
 				blocksBeforeUpload.add(newBlock);
 			}
-			if (LogSetting.LOG_BLOB_WRITER_BLOCKLIST_AFTER_UPLOAD) {
+			if (LogSetting.LOG_BLOBWRITER) {
 				int i = 0;
 				String id = null;
 				for (BlockEntry e : blocksBeforeUpload) {
@@ -101,7 +95,7 @@ public class BlobWriter {
 				}
 			}
 		}
-		if (LogSetting.LOG_BLOB_WRITER || LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_BLOBWRITER) {
 			logger.info("upload End");
 		}
 	}

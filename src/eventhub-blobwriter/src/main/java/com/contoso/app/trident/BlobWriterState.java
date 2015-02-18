@@ -26,7 +26,6 @@ public class BlobWriterState {
 		Redis.setState(key, value, keyToList, stringList);
 	}
 
-	@SuppressWarnings("unused")
 	private static class Redis {
 		private static final Logger logger = (Logger) LoggerFactory.getLogger(Redis.class);
 		private static String host;
@@ -43,7 +42,7 @@ public class BlobWriterState {
 		}
 
 		private static void flush() {
-			if (LogSetting.LOG_REDIS || LogSetting.LOG_METHOD_BEGIN) {
+			if (LogSetting.LOG_REDIS) {
 				logger.info("flushDB Begin");
 			}
 			try (Jedis jedis = new Jedis(host, port, timeout, useSSL)) {
@@ -59,14 +58,14 @@ public class BlobWriterState {
 					throw new FailedException("can't cannect to Redis");
 				}
 			}
-			if (LogSetting.LOG_REDIS || LogSetting.LOG_METHOD_END) {
+			if (LogSetting.LOG_REDIS) {
 				logger.info("flushDB End");
 			}
 		}
 
 		private static String get(String key) {
 			String value = null;
-			if (LogSetting.LOG_REDIS || LogSetting.LOG_METHOD_BEGIN) {
+			if (LogSetting.LOG_REDIS) {
 				logger.info("get Begin params: key= " + key);
 			}
 			if (key != null) {
@@ -84,7 +83,7 @@ public class BlobWriterState {
 					}
 				}
 			}
-			if (LogSetting.LOG_REDIS || LogSetting.LOG_METHOD_END) {
+			if (LogSetting.LOG_REDIS) {
 				logger.info("get End returns " + value);
 			}
 			return value;
@@ -92,7 +91,7 @@ public class BlobWriterState {
 
 		private static List<String> getList(String key, long maxLength) {
 			List<String> stringList = null;
-			if (LogSetting.LOG_REDIS || LogSetting.LOG_METHOD_BEGIN) {
+			if (LogSetting.LOG_REDIS) {
 				logger.info("getList Begin with params: key= " + key + " maxLength= " + maxLength);
 			}
 			if (key != null && maxLength > 0) {
@@ -120,14 +119,14 @@ public class BlobWriterState {
 					}
 				}
 			}
-			if (LogSetting.LOG_REDIS || LogSetting.LOG_METHOD_END) {
+			if (LogSetting.LOG_REDIS) {
 				logger.info("getList End");
 			}
 			return stringList;
 		}
 		
 		static void setState(String key, String value, String keyToList, List<String> stringList) {
-			if (LogSetting.LOG_REDIS || LogSetting.LOG_METHOD_BEGIN) {
+			if (LogSetting.LOG_REDIS) {
 				logger.info("setState Begin");
 				logger.info("setState params: key= " + key);
 				if (key == null || value == null || keyToList == null || stringList == null || stringList.isEmpty()) {
@@ -165,7 +164,7 @@ public class BlobWriterState {
 					}
 				}
 			}
-			if (LogSetting.LOG_REDIS || LogSetting.LOG_METHOD_END) {
+			if (LogSetting.LOG_REDIS) {
 				logger.info("setList End");
 			}
 		}

@@ -4,7 +4,6 @@ package com.contoso.app.trident;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("unused")
 public class Block {
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(Block.class);
 	public int blobid = 1;
@@ -15,43 +14,43 @@ public class Block {
 	static int maxBlockBytes = ConfigProperties.getMaxBlockBytes();
 
 	public Block() {
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
+		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block Constructor Begin");
 		}
 		this.blobid = 1;
 		this.blockid = 1;
 		this.blockdata = "";
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block Constructor End");
 		}
 	}
 
 	public void addData(String msg) {
-		if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_BEGIN) {
+		if (LogSetting.LOG_MESSAGE) {
 			logger.info("Block.addData Begin");
 		}
 		this.blockdata = this.blockdata + msg;
-		if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_MESSAGE) {
 			logger.info("Block.addData End");
 		}
 	}
 
 	public static boolean isMessageSizeWithnLimit(String msg) {
-		if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_BEGIN) {
+		if (LogSetting.LOG_MESSAGE) {
 			logger.info("Block.isMessageSizeWithnLimit Begin");
 		}
 		boolean result = false;
 		if (msg.getBytes().length <= maxBlockBytes) {
 			result = true;
 		}
-		if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_MESSAGE) {
 			logger.info("Block.isMessageSizeWithnLimit End");
 		}
 		return result;
 	}
 
 	public boolean willMessageFitCurrentBlock(String msg) {
-		if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_BEGIN) {
+		if (LogSetting.LOG_MESSAGE) {
 			logger.info("Block.willMessageFitCurrentBlock Begin");
 		}
 		boolean result = false;
@@ -59,24 +58,24 @@ public class Block {
 		if (byteSize <= maxBlockBytes) {
 			result = true;
 		}
-		if (LogSetting.LOG_MESSAGE && LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_MESSAGE) {
 			logger.info("Block.willMessageFitCurrentBlock End");
 		}
 		return result;
 	}
 
 	public void upload() {
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
+		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block.upload Begin");
 		}
 		BlobWriter.upload(this.blobname, this.blockidStr, this.blockdata);
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_BLOCK) {
 			logger.info("BlobState.upload End");
 		}
 	}
 
 	public String build(String blobname) {
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_BEGIN) {
+		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block.build Begin");
 		}
 		this.blockdata = new String("");
@@ -85,7 +84,7 @@ public class Block {
 		this.blockidStr = String.format(blockIdStrFormat, this.blockid);
 		String blobidBlockidStrFormat = ConfigProperties.getProperty("blobidBlockidStrFormat");
 		String blobidAndBlockidStr = String.format(blobidBlockidStrFormat, this.blobid, this.blockid);
-		if (LogSetting.LOG_BLOCK && LogSetting.LOG_METHOD_END) {
+		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block.build End");
 		}
 		return blobidAndBlockidStr;
