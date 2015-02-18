@@ -86,7 +86,7 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 				}
 				msgCount++;
 			} else {
-				// message size is not within the limit, skip the message
+				// message size is not within the limit, skip the message and log it.
 				logger.error(blockList.partitionTxidLogStr + "message skiped: message size exceeds the size limit, message= " + tupleStr);
 			}
 		}
@@ -100,13 +100,13 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 			logger.info(blockList.partitionTxidLogStr + "complete Begin");
 		}
 		if (blockList.currentBlock.blockdata.length() > 0) {
-			blockList.currentBlock.upload(); // upload the last block in the batch
+			blockList.currentBlock.upload();
 			blockList.needPersist = true;
 		}
 		if (blockList.needPersist) {
 			blockList.persistState();
 		}
-		collector.emit(new Values(msgCount)); // emit msgCount for the partition
+		collector.emit(new Values(msgCount));
 		if (LogSetting.LOG_BATCH) {
 			logger.info(blockList.partitionTxidLogStr + "message count = " + msgCount);
 			logger.info(blockList.partitionTxidLogStr + "complete End");

@@ -13,7 +13,8 @@ public class BlockList {
 	public String partitionTxidLogStr;
 	private String partitionTxidKeyStr;
 	private String partitionBlocklistKeyStr;
-	private List<String> blockList; // blockList stores a list of block id string
+	// blockList stores a list of block id string
+	private List<String> blockList; 
 	private int partitionIndex;
 	private long txid;
 
@@ -31,19 +32,22 @@ public class BlockList {
 		String partitionBlocklistKeyStrFormat = ConfigProperties.getProperty("partitionBlocklistKeyStrFormat");
 		this.partitionBlocklistKeyStr = String.format(partitionBlocklistKeyStrFormat, partitionIndex);
 		String lastTxidStr = BlobWriterState.get(this.partitionTxidKeyStr);
-		if (lastTxidStr == null) { // the very first time the topology is running
+		if (lastTxidStr == null) { 
+			// the very first time the topology is running
 			this.currentBlock = getNewBlock();
 			if (LogSetting.LOG_BLOCKLIST) {
 				logger.info("First Batch: partition= " + this.partitionIndex + " last txid= " + lastTxidStr + " current txid= " + txid);
 			}
 		} else {
 			long lastTxid = Long.parseLong(lastTxidStr);
-			if (txid != lastTxid) { // a new batch, not a replay, last batch is successful
+			if (txid != lastTxid) { 
+				// this is a new batch, not a replay, last batch is successful, we just need to get the next block
 				this.currentBlock = getNextBlockAfterLastSuccessBatch();
 				if (LogSetting.LOG_BLOCKLIST) {
 					logger.info("New Batch: partition= " + this.partitionIndex + " last txid= " + lastTxidStr + " current txid= " + txid);
 				}
-			} else {// if(txid == lastTxid), a replay, overwrite old block
+			} else {
+				// since txid == lastTxid, this is a replay, we need to restart from the first block in the last failed batch
 				this.currentBlock = getFirstBlockInLastFailedBatch();
 				if (LogSetting.LOG_BLOCKLIST) {
 					logger.info("Replay: partition= " + this.partitionIndex + " last txid= " + lastTxidStr + " current txid= " + txid);
@@ -102,13 +106,8 @@ public class BlockList {
 		Block block = new Block();
 		List<String> lastBlobidBlockidList = BlobWriterState.getList(this.partitionBlocklistKeyStr, 50000);
 		if (lastBlobidBlockidList != null && lastBlobidBlockidList.size() > 0) {
-			String blockStr = lastBlobidBlockidList.get(0);
-			for (String s : lastBlobidBlockidList) {
-				if (s.compareTo(blockStr) > 0) {// find the last block written
-												// in the last batch
-					blockStr = s;
-				}
-			}
+			int lastIndex = lastBlobidBlockidList.size() -1;
+			String blockStr = lastBlobidBlockidList.get(lastIndex);
 			String[] strArray = blockStr.split("_");
 			block.blobid = Integer.parseInt(strArray[0]);
 			block.blockid = Integer.parseInt(strArray[1]);
@@ -141,11 +140,6 @@ public class BlockList {
 		List<String> lastblocks = BlobWriterState.getList(this.partitionBlocklistKeyStr, 50000);
 		if (lastblocks != null && lastblocks.size() > 0) {
 			String blockStr = lastblocks.get(0);
-			for (String s : lastblocks) {
-				if (s.compareTo(blockStr) < 0) {// find the first block written in the last batch
-					blockStr = s;
-				}
-			}
 			String[] strArray = blockStr.split("_");
 			block.blobid = Integer.parseInt(strArray[0]);
 			block.blockid = Integer.parseInt(strArray[1]);

@@ -10,6 +10,7 @@ import redis.clients.jedis.Transaction;
 import backtype.storm.topology.FailedException;
 
 public class BlobWriterState {
+	// TODO: replace Redis with zookeeper to store BlobWriter State
 	static public void flush() {
 		Redis.flush();
 	}
@@ -49,7 +50,6 @@ public class BlobWriterState {
 				jedis.auth(password);
 				jedis.connect();
 				if (jedis.isConnected()) {
-					// TODO: check redis doc to see if we need to loop through all servers
 					jedis.flushDB();
 				} else {
 					if (LogSetting.LOG_REDIS) {
@@ -148,7 +148,7 @@ public class BlobWriterState {
 							trans.set(key, value);
 							trans.del(keyToList);
 							for (String str : stringList) {
-								trans.lpush(keyToList, str);
+								trans.rpush(keyToList, str);
 							}
 							trans.exec();
 						} catch (Exception e) {

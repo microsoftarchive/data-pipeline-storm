@@ -15,7 +15,8 @@ public class BlobWriterTopology {
 	public static void main(String[] args) throws Exception {
 		boolean isLocalCluster = true;
 		String topologyName = "localTopology";
-		if ((args != null) && (args.length > 0)) { // if running in storm cluster, the first argument is the topology name
+		if ((args != null) && (args.length > 0)) { 
+			// when running in storm cluster, the first argument is the topology name
 			topologyName = args[0];
 			isLocalCluster = false;
 		}
@@ -39,7 +40,8 @@ public class BlobWriterTopology {
 		EventHubSpoutConfig spoutConfig = readConfig();
 		spoutConfig.setTopologyName(topologyName);
 		OpaqueTridentEventHubSpout spout = new OpaqueTridentEventHubSpout(spoutConfig);
-		inputStream = tridentTopology.newStream("message", spout);// the OpaqueTridentEventHubSpout emits events called "message"
+		// the OpaqueTridentEventHubSpout emits events called "message"
+		inputStream = tridentTopology.newStream("message", spout);
 		int numWorkers = Integer.parseInt(ConfigProperties.getProperty("eventhubspout.partitions.count"));
 		inputStream.parallelismHint(numWorkers).partitionAggregate(new Fields("message"), new ByteAggregator(), new Fields("msgCount"));
 		return tridentTopology.build();
