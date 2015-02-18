@@ -46,6 +46,7 @@ public class BlobWriterTopology {
 		OpaqueTridentEventHubSpout spout = new OpaqueTridentEventHubSpout(spoutConfig);
 		inputStream = tridentTopology.newStream("message", spout);// the OpaqueTridentEventHubSpout emits events called "message"
 		int numWorkers = Integer.parseInt(ConfigProperties.getProperty("eventhubspout.partitions.count"));
+		// TODO: emit message count
 		inputStream.parallelismHint(numWorkers).partitionAggregate(new Fields("message"), new ByteAggregator(), new Fields("notused"));
 		return tridentTopology.build();
 	}

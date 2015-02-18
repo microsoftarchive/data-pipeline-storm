@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
 package com.contoso.app.trident;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -197,23 +198,16 @@ public class BlockList {
 		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_BEGIN) {
 			logger.info(this.partitionTxidLogStr + "persistState Begin");
 		}
-
 		if (LogSetting.LOG_TRANSACTION || LogSetting.LOG_PERSIST) {
 			logger.info("persist to redis: set(" + this.partitionTxidKeyStr + ")= " + this.txid + ")");
 			logger.info("persist to redis: number of blocks= " + this.blockList.size());
 		}
-
 		if (LogSetting.LOG_PERSIST) {
 			for (String s : this.blockList) {
 				logger.info("persist to redis: " + this.partitionTxidLogStr + " addToList(" + this.partitionBlocklistKeyStr + ", " + s + ")");
 			}
 		}
-		// TODO remove dependency on Redis, make it pluggable
-		// put both lines in a transaction, make a single call
-		// Storage should have no knowledge of partitionTxidKeyStr,...
-		BlobWriterState.set(this.partitionTxidKeyStr, String.valueOf(this.txid));
-		BlobWriterState.setList(this.partitionBlocklistKeyStr, this.blockList);
-
+		BlobWriterState.setState(this.partitionTxidKeyStr, String.valueOf(this.txid), this.partitionBlocklistKeyStr, this.blockList);
 		if (LogSetting.LOG_BLOCK || LogSetting.LOG_METHOD_END) {
 			logger.info(this.partitionTxidLogStr + "this.partition_tx_logStr + persistState End");
 		}
