@@ -1,17 +1,26 @@
 // Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
 package com.contoso.app.trident;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.tuple.Fields;
+
 import com.microsoft.eventhubs.spout.EventHubSpoutConfig;
 import com.microsoft.eventhubs.trident.OpaqueTridentEventHubSpout;
+
 import storm.trident.Stream;
 import storm.trident.TridentTopology;
 
 public class BlobWriterTopology {
+	private static final DateFormat df = new SimpleDateFormat("-yyyy-MM-dd-HH-mm");
+	public static final String topologyStartTime = df.format(Calendar.getInstance().getTime());
+
 	public static void main(String[] args) throws Exception {
 		boolean isLocalCluster = true;
 		String topologyName = "localTopology";

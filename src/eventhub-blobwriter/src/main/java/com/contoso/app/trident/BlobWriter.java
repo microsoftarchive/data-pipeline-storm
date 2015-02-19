@@ -4,10 +4,7 @@ package com.contoso.app.trident;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +27,7 @@ public class BlobWriter {
 	static CloudBlobContainer container = null;
 	static {
 		try {
-			DateFormat df = new SimpleDateFormat("-yyyy-MM-dd-HH-mm-ss");
-			Calendar calobj = Calendar.getInstance();
-			String containerName = ConfigProperties.getProperty("storage.blob.account.container") + df.format(calobj.getTime());
+			String containerName = ConfigProperties.getProperty("storage.blob.account.container") + BlobWriterTopology.topologyStartTime;
 			String accountName = ConfigProperties.getProperty("storage.blob.account.name");
 			String accountKey = ConfigProperties.getProperty("storage.blob.account.key");
 			String connectionStrFormatter = "DefaultEndpointsProtocol=http;AccountName=%s;AccountKey=%s";
