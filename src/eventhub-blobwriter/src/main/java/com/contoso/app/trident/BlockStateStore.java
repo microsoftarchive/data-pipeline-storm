@@ -1,7 +1,5 @@
 package com.contoso.app.trident;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -10,16 +8,8 @@ import backtype.storm.topology.FailedException;
 
 public class BlockStateStore {
 	// TODO: replace Redis with zookeeper to store BlobWriter State
-	static public void flush() {
-		Redis.flush();
-	}
-
 	static public String get(String key) {
 		return Redis.get(key);
-	}
-
-	static public List<String> getList(String key, long maxLength) {
-		return Redis.getList(key, maxLength);
 	}
 
 	static public void setState(String key1, String value1, String key2, String value2, String key3, String value3) {
@@ -61,27 +51,6 @@ public class BlockStateStore {
 			}
 		}
 
-		private static void flush() {
-			if (LogSetting.LOG_REDIS) {
-				logger.info("flushDB Begin");
-			}
-			try (Jedis jedis = new Jedis(host, port, timeout, useSSL)) {
-				jedis.auth(password);
-				jedis.connect();
-				if (jedis.isConnected()) {
-					jedis.flushDB();
-				} else {
-					if (LogSetting.LOG_REDIS) {
-						logger.info("Error: can't cannect to Redis !!!!!");
-					}
-					throw new FailedException("can't cannect to Redis");
-				}
-			}
-			if (LogSetting.LOG_REDIS) {
-				logger.info("flushDB End");
-			}
-		}
-
 		private static String get(String key) {
 			String value = null;
 			if (LogSetting.LOG_REDIS) {
@@ -108,42 +77,6 @@ public class BlockStateStore {
 			return value;
 		}
 
-		private static List<String> getList(String key, long maxLength) {
-			List<String> stringList = null;
-			if (LogSetting.LOG_REDIS) {
-				logger.info("getList Begin with params: key= " + key + " maxLength= " + maxLength);
-			}
-			if (key != null && maxLength > 0) {
-
-				try (Jedis jedis = new Jedis(host, port, timeout, useSSL)) {
-					jedis.auth(password);
-					jedis.connect();
-					if (jedis.isConnected()) {
-						stringList = jedis.lrange(key, 0, maxLength - 1);
-					} else {
-						if (LogSetting.LOG_REDIS) {
-							logger.info("Error: can't cannect to Redis !!!!!");
-						}
-						throw new FailedException("can't cannect to Redis");
-					}
-				}
-			}
-			if (LogSetting.LOG_REDIS) {
-				if (stringList == null || stringList.size() == 0) {
-					logger.info("getList returns 0 record");
-				} else {
-					logger.info("getList returns " + stringList.size() + " record");
-					for (String s : stringList) {
-						logger.info("getList return record: " + s);
-					}
-				}
-			}
-			if (LogSetting.LOG_REDIS) {
-				logger.info("getList End");
-			}
-			return stringList;
-		}
-		
 		public static void clearState(String key1, String key2, String key3) {
 			if (LogSetting.LOG_REDIS) {
 				logger.info("clearState Begin");
