@@ -35,6 +35,7 @@ public class Block {
 	public String blobname;
 	public String blockidStr;
 	public String blockdata;
+	public String blobidAndBlockidStr;
 
 	public Block() {
 		if (LogSetting.LOG_BLOCK) {
@@ -97,17 +98,16 @@ public class Block {
 		}
 	}
 
-	public String build(String blobname) {
+	public void build(String blobname) {
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block.build Begin");
 		}
 		this.blockdata = new String("");
 		this.blobname = blobname;
 		this.blockidStr = String.format(BLOCKID_FORMATTER, this.blockid);
-		String blobidAndBlockidStr = String.format(BLOBID_BLOCKID_FORMATTER, this.blobid, this.blockid);
+		this.blobidAndBlockidStr = String.format(BLOBID_BLOCKID_FORMATTER, this.blobid, this.blockid);
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block.build End");
 		}
-		return blobidAndBlockidStr;
 	}
 }

@@ -4,12 +4,11 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 import backtype.storm.topology.FailedException;
 
-public class BlobWriterState {
+public class BlockStateStore {
 	// TODO: replace Redis with zookeeper to store BlobWriter State
 	static public void flush() {
 		Redis.flush();
@@ -23,14 +22,13 @@ public class BlobWriterState {
 		return Redis.getList(key, maxLength);
 	}
 
-	static public void setState(String key, String value, String keyToList, List<String> stringList) {
-		Redis.setState(key, value, keyToList, stringList);
+	static public void setState(String key1, String value1, String key2, String value2, String key3, String value3) {
+		Redis.setState(key1, value1, key2, value2, key3, value3);
 	}
 	
-	static public void clearState(String key, String keyToList) {
-		Redis.clearState(key, keyToList);
+	static public void clearState(String key1, String key2,String key3) {
+		Redis.clearState(key1, key2,key3);
 	}
-
 
 	private static class Redis {
 		private static final Logger logger = (Logger) LoggerFactory.getLogger(Redis.class);
@@ -146,21 +144,22 @@ public class BlobWriterState {
 			return stringList;
 		}
 		
-		static void clearState(String key, String keyToList) {
+		public static void clearState(String key1, String key2, String key3) {
 			if (LogSetting.LOG_REDIS) {
 				logger.info("clearState Begin");
-				logger.info("key= " + key + " keyToList= "+keyToList);
+				logger.info("clear keys " + key1 + ", "+ key2 + ", "+ key3 + ", ");
 			}
 
-			if (key != null && keyToList != null) {
+			if (key1 != null && key2 != null && key3 != null) {
 				try (Jedis jedis = new Jedis(host, port, timeout, useSSL)) {
 					jedis.auth(password);
 					jedis.connect();
 					if (jedis.isConnected()) {
 						Transaction trans = jedis.multi();
 						try {
-							trans.del(key);
-							trans.del(keyToList);
+							trans.del(key1);
+							trans.del(key2);
+							trans.del(key3);
 							trans.exec();
 						} catch (Exception e) {
 							trans.discard();
@@ -179,31 +178,20 @@ public class BlobWriterState {
 			}
 		}
 
-		static void setState(String key, String value, String keyToList, List<String> stringList) {
+		static void setState(String key1, String value1, String key2, String value2, String key3, String value3) {
 			if (LogSetting.LOG_REDIS) {
 				logger.info("setState Begin");
-				logger.info("setState params: key= " + key);
-				if (key == null || value == null || keyToList == null || stringList == null || stringList.isEmpty()) {
-					logger.info("setState has some null parameters!");
-				} else {
-					logger.info("setState Begin: key= " + key + " value= " + value + " keyToList= " + keyToList);
-					for (String s : stringList) {
-						logger.info("setState params stringlist: " + s);
-					}
-				}
 			}
-			if (key != null && value != null && keyToList != null && stringList != null && !stringList.isEmpty()) {
+			if (key1 != null && value1 != null ) {
 				try (Jedis jedis = new Jedis(host, port, timeout, useSSL)) {
 					jedis.auth(password);
 					jedis.connect();
 					if (jedis.isConnected()) {
 						Transaction trans = jedis.multi();
 						try {
-							trans.set(key, value);
-							trans.del(keyToList);
-							for (String str : stringList) {
-								trans.rpush(keyToList, str);
-							}
+							trans.set(key1, value1);
+							trans.set(key2, value2);
+							trans.set(key3, value3);
 							trans.exec();
 						} catch (Exception e) {
 							trans.discard();

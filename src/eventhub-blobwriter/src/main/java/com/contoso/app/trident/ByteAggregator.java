@@ -19,27 +19,38 @@ import storm.trident.operation.TridentOperationContext;
 import storm.trident.topology.TransactionAttempt;
 import storm.trident.tuple.TridentTuple;
 
-public class ByteAggregator extends BaseAggregator<BlockList> {
+public class ByteAggregator extends BaseAggregator<BlockState> {
 	private static final long serialVersionUID = 1L;
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(ByteAggregator.class);
-	private static String PARTITION_TXID_KEY_FORMATTER = "p_%05d_Txid";
-	private static String PARTITION_BLOCKLIST_KEY_FORMATTER = "p_%05d__Blocklist";
+	private static String PARTITION_TXID_KEY_FORMATTER = "partition_%05d_transactionid";
+	private static String PARTITION_FIRSTBLOCK_KEY_FORMATTER = "partition_%05d_firstblock";
+	private static String PARTITION_LASTBLOCK_KEY_FORMATTER = "partition_%05d_lastblock";
 
 	private long txid;
 	private int partitionIndex;
 	private long msgCount;
-	private static IStateStore stateStore = null;
+	public static IStateStore stateStore = null;
 	public static String partitionTxidKeyStr = null;
-	public static String partitionBlocklistKeyStr = null;
+	public static String partitionFirstblockKeyStr = null;
+	public static String partitionLastblockKeyStr = null;
+	//public static String partitionBlocklistKeyStr = null;
 	
 	static {
 		String _PARTITION_TXID_KEY_FORMATTER = ConfigProperties.getProperty("PARTITION_TXID_KEY_FORMATTER");
 		if (_PARTITION_TXID_KEY_FORMATTER != null) {
 			PARTITION_TXID_KEY_FORMATTER = _PARTITION_TXID_KEY_FORMATTER; 
 		}
-		String _PARTITION_BLOCKLIST_KEY_FORMATTER = ConfigProperties.getProperty("PARTITION_BLOCKLIST_KEY_FORMATTER");
-		if (_PARTITION_BLOCKLIST_KEY_FORMATTER != null) {
-			PARTITION_BLOCKLIST_KEY_FORMATTER = _PARTITION_BLOCKLIST_KEY_FORMATTER; 
+//		String _PARTITION_BLOCKLIST_KEY_FORMATTER = ConfigProperties.getProperty("PARTITION_BLOCKLIST_KEY_FORMATTER");
+//		if (_PARTITION_BLOCKLIST_KEY_FORMATTER != null) {
+//			PARTITION_BLOCKLIST_KEY_FORMATTER = _PARTITION_BLOCKLIST_KEY_FORMATTER; 
+//		}
+		String _PARTITION_FIRSTBLOCK_KEY_FORMATTER = ConfigProperties.getProperty("PARTITION_FIRSTBLOCK_KEY_FORMATTER");
+		if (_PARTITION_FIRSTBLOCK_KEY_FORMATTER != null) {
+			PARTITION_FIRSTBLOCK_KEY_FORMATTER = _PARTITION_FIRSTBLOCK_KEY_FORMATTER; 
+		}
+		String _PARTITION_LASTBLOCK_KEY_FORMATTER = ConfigProperties.getProperty("PARTITION_LASTBLOCK_KEY_FORMATTER");
+		if (_PARTITION_LASTBLOCK_KEY_FORMATTER != null) {
+			PARTITION_LASTBLOCK_KEY_FORMATTER = _PARTITION_LASTBLOCK_KEY_FORMATTER; 
 		}
 	}
 
@@ -57,7 +68,8 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 		}
 		this.partitionIndex = context.getPartitionIndex();
 		ByteAggregator.partitionTxidKeyStr = String.format(PARTITION_TXID_KEY_FORMATTER, partitionIndex);
-		ByteAggregator.partitionBlocklistKeyStr = String.format(PARTITION_BLOCKLIST_KEY_FORMATTER, partitionIndex);
+		ByteAggregator.partitionFirstblockKeyStr = String.format(PARTITION_FIRSTBLOCK_KEY_FORMATTER, partitionIndex);
+		ByteAggregator.partitionLastblockKeyStr = String.format(PARTITION_LASTBLOCK_KEY_FORMATTER, partitionIndex);
 
 		if (ByteAggregator.stateStore == null) {
 
@@ -76,7 +88,7 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 					((Integer) conf.get("storm.zookeeper.retry.interval")).intValue());
 			ByteAggregator.stateStore.open();
 		}
-		BlobWriterState.clearState(ByteAggregator.partitionTxidKeyStr, ByteAggregator.partitionBlocklistKeyStr);
+		BlockStateStore.clearState(ByteAggregator.partitionTxidKeyStr, ByteAggregator.partitionFirstblockKeyStr,ByteAggregator.partitionLastblockKeyStr);
 
 		super.prepare(conf, context);
 		if (LogSetting.LOG_BATCH) {
@@ -84,7 +96,7 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 		}
 	}
 
-	public BlockList init(Object batchId, TridentCollector collector) {
+	public BlockState init(Object batchId, TridentCollector collector) {
 		if (LogSetting.LOG_BATCH) {
 			logger.info("p" + this.partitionIndex + ": init End");
 		}
@@ -94,14 +106,14 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 			throw new FailedException("Error configuring ByteAggregator");
 		}
 		msgCount = 0;
-		BlockList blockList = new BlockList(this.partitionIndex, this.txid);
+		BlockState blockList = new BlockState(this.partitionIndex, this.txid);
 		if (LogSetting.LOG_BATCH) {
 			logger.info(blockList.partitionTxidLogStr + "init End");
 		}
 		return blockList;
 	}
 
-	public void aggregate(BlockList blockList, TridentTuple tuple, TridentCollector collector) {
+	public void aggregate(BlockState blockList, TridentTuple tuple, TridentCollector collector) {
 		if (LogSetting.LOG_MESSAGE) {
 			logger.info(blockList.partitionTxidLogStr + "aggregate Begin");
 		}
@@ -141,7 +153,7 @@ public class ByteAggregator extends BaseAggregator<BlockList> {
 		}
 	}
 
-	public void complete(BlockList blockList, TridentCollector collector) {
+	public void complete(BlockState blockList, TridentCollector collector) {
 		if (LogSetting.LOG_BATCH) {
 			logger.info(blockList.partitionTxidLogStr + "complete Begin");
 		}
