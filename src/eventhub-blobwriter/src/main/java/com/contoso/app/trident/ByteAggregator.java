@@ -33,17 +33,12 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 	public static String partitionTxidKeyStr = null;
 	public static String partitionFirstblockKeyStr = null;
 	public static String partitionLastblockKeyStr = null;
-	//public static String partitionBlocklistKeyStr = null;
 	
 	static {
 		String _PARTITION_TXID_KEY_FORMATTER = ConfigProperties.getProperty("PARTITION_TXID_KEY_FORMATTER");
 		if (_PARTITION_TXID_KEY_FORMATTER != null) {
 			PARTITION_TXID_KEY_FORMATTER = _PARTITION_TXID_KEY_FORMATTER; 
 		}
-//		String _PARTITION_BLOCKLIST_KEY_FORMATTER = ConfigProperties.getProperty("PARTITION_BLOCKLIST_KEY_FORMATTER");
-//		if (_PARTITION_BLOCKLIST_KEY_FORMATTER != null) {
-//			PARTITION_BLOCKLIST_KEY_FORMATTER = _PARTITION_BLOCKLIST_KEY_FORMATTER; 
-//		}
 		String _PARTITION_FIRSTBLOCK_KEY_FORMATTER = ConfigProperties.getProperty("PARTITION_FIRSTBLOCK_KEY_FORMATTER");
 		if (_PARTITION_FIRSTBLOCK_KEY_FORMATTER != null) {
 			PARTITION_FIRSTBLOCK_KEY_FORMATTER = _PARTITION_FIRSTBLOCK_KEY_FORMATTER; 
