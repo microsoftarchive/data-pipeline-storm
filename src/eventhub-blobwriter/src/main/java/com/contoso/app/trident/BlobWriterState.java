@@ -26,6 +26,11 @@ public class BlobWriterState {
 	static public void setState(String key, String value, String keyToList, List<String> stringList) {
 		Redis.setState(key, value, keyToList, stringList);
 	}
+	
+	static public void clearState(String key, String keyToList) {
+		Redis.clearState(key, keyToList);
+	}
+
 
 	private static class Redis {
 		private static final Logger logger = (Logger) LoggerFactory.getLogger(Redis.class);
@@ -141,12 +146,45 @@ public class BlobWriterState {
 			return stringList;
 		}
 		
+		static void clearState(String key, String keyToList) {
+			if (LogSetting.LOG_REDIS) {
+				logger.info("clearState Begin");
+				logger.info("key= " + key + " keyToList= "+keyToList);
+			}
+
+			if (key != null && keyToList != null) {
+				try (Jedis jedis = new Jedis(host, port, timeout, useSSL)) {
+					jedis.auth(password);
+					jedis.connect();
+					if (jedis.isConnected()) {
+						Transaction trans = jedis.multi();
+						try {
+							trans.del(key);
+							trans.del(keyToList);
+							trans.exec();
+						} catch (Exception e) {
+							trans.discard();
+							throw new FailedException(e.getMessage());
+						}
+					} else {
+						if (LogSetting.LOG_REDIS) {
+							logger.info("Error: can't cannect to Redis !!!!!");
+						}
+						throw new FailedException("can't cannect to Redis");
+					}
+				}
+			}
+			if (LogSetting.LOG_REDIS) {
+				logger.info("clearState End");
+			}
+		}
+
 		static void setState(String key, String value, String keyToList, List<String> stringList) {
 			if (LogSetting.LOG_REDIS) {
 				logger.info("setState Begin");
 				logger.info("setState params: key= " + key);
 				if (key == null || value == null || keyToList == null || stringList == null || stringList.isEmpty()) {
-					logger.info("setState params stringList is empty!");
+					logger.info("setState has some null parameters!");
 				} else {
 					logger.info("setState Begin: key= " + key + " value= " + value + " keyToList= " + keyToList);
 					for (String s : stringList) {
