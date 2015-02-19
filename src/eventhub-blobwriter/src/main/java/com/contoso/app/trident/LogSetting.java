@@ -8,6 +8,5 @@ public final class LogSetting {
 	public static final boolean LOG_BLOCK = Boolean.parseBoolean(ConfigProperties.getProperty("LOG_BLOCK"));
 	public static final boolean LOG_BLOCKLIST = Boolean.parseBoolean(ConfigProperties.getProperty("LOG_BLOCKLIST"));
 	public static final boolean LOG_MESSAGEROLLOVER = Boolean.parseBoolean(ConfigProperties.getProperty("LOG_MESSAGEROLLOVER"));
-	public static final boolean LOG_CONFIG = Boolean.parseBoolean(ConfigProperties.getProperty("LOG_CONFIG"));
 	public static final boolean LOG_REDIS = Boolean.parseBoolean(ConfigProperties.getProperty("LOG_REDIS"));
 }

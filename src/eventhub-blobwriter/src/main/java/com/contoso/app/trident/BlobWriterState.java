@@ -29,10 +29,10 @@ public class BlobWriterState {
 
 	private static class Redis {
 		private static final Logger logger = (Logger) LoggerFactory.getLogger(Redis.class);
-		private static String host;
-		private static String password;
-		private static int port;
-		private static int timeout;
+		private static String host = null;
+		private static String password= null;
+		private static int port = -1;
+		private static int timeout = -1;
 		private static boolean useSSL = true;
 
 		static {
@@ -40,6 +40,22 @@ public class BlobWriterState {
 			password = ConfigProperties.getProperty("redis.password");
 			port = Integer.parseInt(ConfigProperties.getProperty("redis.port"));
 			timeout = Integer.parseInt(ConfigProperties.getProperty("redis.timeout"));
+			if(host == null)
+			{
+				throw new ExceptionInInitializerError("Error: host is missing" );
+			}
+			if(password == null)
+			{
+				throw new ExceptionInInitializerError("Error: password is missing" );
+			}
+			if(port == -1)
+			{
+				throw new ExceptionInInitializerError("Error: port is missing" );
+			}
+			if(timeout == -1)
+			{
+				throw new ExceptionInInitializerError("Error: timeout is missing" );
+			}
 		}
 
 		private static void flush() {

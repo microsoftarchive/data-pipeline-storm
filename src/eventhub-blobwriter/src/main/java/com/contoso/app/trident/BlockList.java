@@ -3,36 +3,67 @@ package com.contoso.app.trident;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BlockList {
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(BlockList.class);
+
+	private static String PARTITION_TXID_LOG_FORMATTER = "partition=%05d_Txid=%05d:";
+	private static String PARTITION_TXID_KEY_FORMATTER = "p_%05d_Txid";
+	private static String PARTITION_BLOCKLIST_KEY_FORMATTER = "p_%05d__Blocklist";
+	private static String BLOBNAME_FORMATTER = "BlobWriterTopology/%05d/%05d";
+	private static int MAX_NUMBER_OF_BLOCKS = 50000;
+	static {
+		String _PARTITION_TXID_LOG_FORMATTER = ConfigProperties.getProperty("PARTITION_TXID_LOG_FORMATTER");
+		if (_PARTITION_TXID_LOG_FORMATTER != null) {
+			PARTITION_TXID_LOG_FORMATTER = _PARTITION_TXID_LOG_FORMATTER; 
+		}
+		String _PARTITION_TXID_KEY_FORMATTER = ConfigProperties.getProperty("PARTITION_TXID_KEY_FORMATTER");
+		if (_PARTITION_TXID_KEY_FORMATTER != null) {
+			PARTITION_TXID_KEY_FORMATTER = _PARTITION_TXID_KEY_FORMATTER; 
+		}
+		String _PARTITION_BLOCKLIST_KEY_FORMATTER = ConfigProperties.getProperty("PARTITION_BLOCKLIST_KEY_FORMATTER");
+		if (_PARTITION_BLOCKLIST_KEY_FORMATTER != null) {
+			PARTITION_BLOCKLIST_KEY_FORMATTER = _PARTITION_BLOCKLIST_KEY_FORMATTER; 
+		}
+		String _BLOBNAME_FORMATTER = ConfigProperties.getProperty("BLOBNAME_FORMATTER");
+		if (_BLOBNAME_FORMATTER != null) {
+			BLOBNAME_FORMATTER = _BLOBNAME_FORMATTER; 
+		}
+
+		String _MAX_NUMBER_OF_BLOCKS = ConfigProperties.getProperty("storage.blob.block.number.max");
+		if (_MAX_NUMBER_OF_BLOCKS != null) {
+			int i_MAX_NUMBER_OF_BLOCKS = Integer.parseInt(_MAX_NUMBER_OF_BLOCKS);
+			if (i_MAX_NUMBER_OF_BLOCKS > 0 && i_MAX_NUMBER_OF_BLOCKS <= 50000) {
+				MAX_NUMBER_OF_BLOCKS = i_MAX_NUMBER_OF_BLOCKS;
+			}
+		}
+	}
+
 	public Block currentBlock;
 	public boolean needPersist = false;
 	public String partitionTxidLogStr;
 	private String partitionTxidKeyStr;
 	private String partitionBlocklistKeyStr;
 	// blockList stores a list of block id string
-	private List<String> blockList; 
+	private List<String> blockList;
 	private int partitionIndex;
 	private long txid;
 
 	public BlockList(int partitionIndex, long txid) {
-		String partitionTxidLogStrFormat = ConfigProperties.getProperty("partitionTxidLogStrFormat");
-		this.partitionTxidLogStr = String.format(partitionTxidLogStrFormat, partitionIndex, txid);
+		this.partitionTxidLogStr = String.format(PARTITION_TXID_LOG_FORMATTER, partitionIndex, txid);
 		if (LogSetting.LOG_BLOCKLIST) {
 			logger.info(partitionTxidLogStr + "Constructor Begin");
 		}
 		this.blockList = new ArrayList<String>();
 		this.partitionIndex = partitionIndex;
 		this.txid = txid;
-		String partitionTxidKeyStrFormat = ConfigProperties.getProperty("partitionTxidKeyStrFormat");
-		this.partitionTxidKeyStr = String.format(partitionTxidKeyStrFormat, partitionIndex);
-		String partitionBlocklistKeyStrFormat = ConfigProperties.getProperty("partitionBlocklistKeyStrFormat");
-		this.partitionBlocklistKeyStr = String.format(partitionBlocklistKeyStrFormat, partitionIndex);
+		this.partitionTxidKeyStr = String.format(PARTITION_TXID_KEY_FORMATTER, partitionIndex);
+		this.partitionBlocklistKeyStr = String.format(PARTITION_BLOCKLIST_KEY_FORMATTER, partitionIndex);
 		String lastTxidStr = BlobWriterState.get(this.partitionTxidKeyStr);
-		if (lastTxidStr == null) { 
+		if (lastTxidStr == null) {
 			// the very first time the topology is running
 			this.currentBlock = getNewBlock();
 			if (LogSetting.LOG_BLOCKLIST) {
@@ -40,7 +71,7 @@ public class BlockList {
 			}
 		} else {
 			long lastTxid = Long.parseLong(lastTxidStr);
-			if (txid != lastTxid) { 
+			if (txid != lastTxid) {
 				// this is a new batch, not a replay, last batch is successful, we just need to get the next block
 				this.currentBlock = getNextBlockAfterLastSuccessBatch();
 				if (LogSetting.LOG_BLOCKLIST) {
@@ -65,8 +96,7 @@ public class BlockList {
 			logger.info(this.partitionTxidLogStr + "getNewBlock Begin");
 		}
 		Block block = new Block();
-		String blobNameFormat = ConfigProperties.getProperty("blobNameFormat");
-		String blobname = String.format(blobNameFormat, this.partitionIndex, block.blobid);
+		String blobname = String.format(BLOBNAME_FORMATTER, this.partitionIndex, block.blobid);
 		String blobidAndBlockidStr = block.build(blobname);
 		this.blockList.add(blobidAndBlockidStr);
 		if (LogSetting.LOG_BLOCK) {
@@ -80,16 +110,14 @@ public class BlockList {
 			logger.info("getNextBlock Begin");
 		}
 		Block block = new Block();
-		int maxNumberOfBlocks = ConfigProperties.getMaxNumberOfblocks();
-		if (current.blockid < maxNumberOfBlocks) {
+		if (current.blockid < MAX_NUMBER_OF_BLOCKS) {
 			block.blobid = current.blobid;
 			block.blockid = current.blockid + 1;
 		} else {
 			block.blobid = current.blobid + 1;
 			block.blockid = 1;
 		}
-		String blobNameFormat = ConfigProperties.getProperty("blobNameFormat");
-		String blobname = String.format(blobNameFormat, this.partitionIndex, block.blobid);
+		String blobname = String.format(BLOBNAME_FORMATTER, this.partitionIndex, block.blobid);
 		String blobidAndBlockidStr = block.build(blobname);
 		this.blockList.add(blobidAndBlockidStr);
 		if (LogSetting.LOG_BLOCK) {
@@ -106,7 +134,7 @@ public class BlockList {
 		Block block = new Block();
 		List<String> lastBlobidBlockidList = BlobWriterState.getList(this.partitionBlocklistKeyStr, 50000);
 		if (lastBlobidBlockidList != null && lastBlobidBlockidList.size() > 0) {
-			int lastIndex = lastBlobidBlockidList.size() -1;
+			int lastIndex = lastBlobidBlockidList.size() - 1;
 			String blockStr = lastBlobidBlockidList.get(lastIndex);
 			String[] strArray = blockStr.split("_");
 			block.blobid = Integer.parseInt(strArray[0]);
@@ -121,8 +149,7 @@ public class BlockList {
 				logger.info(this.partitionTxidLogStr + "List(" + this.partitionBlocklistKeyStr + ") is null or empty");
 			}
 		}
-		String blobNameFormat = ConfigProperties.getProperty("blobNameFormat");
-		String blobname = String.format(blobNameFormat, this.partitionIndex, block.blobid);
+		String blobname = String.format(BLOBNAME_FORMATTER, this.partitionIndex, block.blobid);
 		block.build(blobname);
 		block = getNextBlock(block);
 		if (LogSetting.LOG_BLOCK) {
@@ -151,8 +178,7 @@ public class BlockList {
 		} else {
 			logger.info(this.partitionTxidLogStr + "List(" + this.partitionBlocklistKeyStr + ") is null or empty");
 		}
-		String blobNameFormat = ConfigProperties.getProperty("blobNameFormat");
-		String blobname = String.format(blobNameFormat, this.partitionIndex, block.blobid);
+		String blobname = String.format(BLOBNAME_FORMATTER, this.partitionIndex, block.blobid);
 		String blobidAndBlockidStr = block.build(blobname);
 		this.blockList.add(blobidAndBlockidStr);
 

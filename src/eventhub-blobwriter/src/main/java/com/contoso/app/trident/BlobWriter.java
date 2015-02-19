@@ -1,12 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
 package com.contoso.app.trident;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import backtype.storm.topology.FailedException;
+
 import com.microsoft.azure.storage.AccessCondition;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.blob.BlobRequestOptions;
@@ -23,9 +30,11 @@ public class BlobWriter {
 	static CloudBlobContainer container = null;
 	static {
 		try {
+			DateFormat df = new SimpleDateFormat("-yyyy-MM-dd-HH-mm-ss");
+			Calendar calobj = Calendar.getInstance();
+			String containerName = ConfigProperties.getProperty("storage.blob.account.container") + df.format(calobj.getTime());
 			String accountName = ConfigProperties.getProperty("storage.blob.account.name");
 			String accountKey = ConfigProperties.getProperty("storage.blob.account.key");
-			String containerName = ConfigProperties.getContainerName();
 			String connectionStrFormatter = "DefaultEndpointsProtocol=http;AccountName=%s;AccountKey=%s";
 			String connectionStr = String.format(connectionStrFormatter, accountName, accountKey);
 			CloudStorageAccount account = CloudStorageAccount.parse(String.format(connectionStr, accountName, accountKey));
