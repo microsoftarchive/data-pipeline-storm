@@ -82,7 +82,6 @@ public class BlockStateStore {
 				logger.info("clearState Begin");
 				logger.info("clear keys " + key1 + ", "+ key2 + ", "+ key3 + ", ");
 			}
-
 			if (key1 != null && key2 != null && key3 != null) {
 				try (Jedis jedis = new Jedis(host, port, timeout, useSSL)) {
 					jedis.auth(password);
@@ -130,7 +129,6 @@ public class BlockStateStore {
 							trans.discard();
 							throw new FailedException(e.getMessage());
 						}
-
 					} else {
 						if (LogSetting.LOG_REDIS) {
 							logger.info("Error: can't cannect to Redis !!!!!");

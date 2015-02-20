@@ -2,15 +2,10 @@
 
 package com.contoso.app.trident;
 
-import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.microsoft.eventhubs.spout.IStateStore;
-import com.microsoft.eventhubs.spout.ZookeeperStateStore;
-
 import backtype.storm.topology.FailedException;
 import backtype.storm.tuple.Values;
 import storm.trident.operation.BaseAggregator;
@@ -29,7 +24,6 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 	private long txid;
 	private int partitionIndex;
 	private long msgCount;
-	public static IStateStore stateStore = null;
 	public static String partitionTxidKeyStr = null;
 	public static String partitionFirstblockKeyStr = null;
 	public static String partitionLastblockKeyStr = null;
@@ -55,7 +49,6 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void prepare(@SuppressWarnings("rawtypes") Map conf, TridentOperationContext context) {
 		if (LogSetting.LOG_BATCH) {
@@ -65,26 +58,7 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 		ByteAggregator.partitionTxidKeyStr = String.format(PARTITION_TXID_KEY_FORMATTER, partitionIndex);
 		ByteAggregator.partitionFirstblockKeyStr = String.format(PARTITION_FIRSTBLOCK_KEY_FORMATTER, partitionIndex);
 		ByteAggregator.partitionLastblockKeyStr = String.format(PARTITION_LASTBLOCK_KEY_FORMATTER, partitionIndex);
-
-		if (ByteAggregator.stateStore == null) {
-
-			@SuppressWarnings("rawtypes")
-			List<String> zkServers = (List) conf.get("storm.zookeeper.servers");
-			Integer zkPort = Integer.valueOf(((Number) conf.get("storm.zookeeper.port")).intValue());
-			StringBuilder sb = new StringBuilder();
-			for (String zk : zkServers) {
-				if (sb.length() > 0) {
-					sb.append(',');
-				}
-				sb.append(zk + ":" + zkPort);
-			}
-			String zkEndpointAddress = sb.toString();
-			ByteAggregator.stateStore = new ZookeeperStateStore(zkEndpointAddress, ((Integer) conf.get("storm.zookeeper.retry.times")).intValue(),
-					((Integer) conf.get("storm.zookeeper.retry.interval")).intValue());
-			ByteAggregator.stateStore.open();
-		}
 		BlockStateStore.clearState(ByteAggregator.partitionTxidKeyStr, ByteAggregator.partitionFirstblockKeyStr,ByteAggregator.partitionLastblockKeyStr);
-
 		super.prepare(conf, context);
 		if (LogSetting.LOG_BATCH) {
 			logger.info("p" + this.partitionIndex + ": prepare End");
