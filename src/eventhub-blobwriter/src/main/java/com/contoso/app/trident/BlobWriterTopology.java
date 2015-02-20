@@ -22,7 +22,7 @@ public class BlobWriterTopology {
 	public static void main(String[] args) throws Exception {
 		boolean isLocalCluster = true;
 		String topologyName = "localTopology";
-		if ((args != null) && (args.length > 0)) { 
+		if ((args != null) && (args.length > 0)) {
 			// when running in storm cluster, the first argument is the topology name
 			topologyName = args[0];
 			isLocalCluster = false;

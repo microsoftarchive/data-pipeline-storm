@@ -6,7 +6,6 @@ public final class LogSetting {
 	public static final boolean LOG_BLOBWRITER = Boolean.parseBoolean(ConfigProperties.getProperty("LOG_BLOBWRITER"));
 	public static final boolean LOG_MESSAGE = Boolean.parseBoolean(ConfigProperties.getProperty("LOG_MESSAGE"));
 	public static final boolean LOG_BLOCK = Boolean.parseBoolean(ConfigProperties.getProperty("LOG_BLOCK"));
-	public static final boolean LOG_BLOCKLIST = Boolean.parseBoolean(ConfigProperties.getProperty("LOG_BLOCKLIST"));
 	public static final boolean LOG_MESSAGEROLLOVER = Boolean.parseBoolean(ConfigProperties.getProperty("LOG_MESSAGEROLLOVER"));
 	public static final boolean LOG_REDIS = Boolean.parseBoolean(ConfigProperties.getProperty("LOG_REDIS"));
 }

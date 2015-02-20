@@ -7,27 +7,26 @@ import org.slf4j.LoggerFactory;
 
 public class Block {
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(Block.class);
-	private static String BLOCKID_FORMATTER = "%05d";
-	private static String BLOBID_BLOCKID_FORMATTER = "%05d_%05d";
-	private static int MAX_BLOCK_BYTES = 4194304;
+	private static String blockidFormatter = "%05d";
+	private static String blobidAndblockidFormatter = "%05d_%05d";
+	private static int maxBlockBytes = 4194304;
 	static {
-		String _BLOCKID_FORMATTER = ConfigProperties.getProperty("BLOCKID_FORMATTER");
-		if (_BLOCKID_FORMATTER != null) {
-			BLOCKID_FORMATTER = _BLOCKID_FORMATTER;
+		String blockidFormatterStr = ConfigProperties.getProperty("BLOCKID_FORMATTER");
+		if (blockidFormatterStr != null) {
+			blockidFormatter = blockidFormatterStr;
 		}
-		String _BLOBID_BLOCKID_FORMATTER = ConfigProperties.getProperty("BLOBID_BLOCKID_FORMATTER");
-		if (_BLOBID_BLOCKID_FORMATTER != null) {
-			BLOBID_BLOCKID_FORMATTER = _BLOBID_BLOCKID_FORMATTER;
+		String blobidAndblockidFormatterStr = ConfigProperties.getProperty("BLOBID_BLOCKID_FORMATTER");
+		if (blobidAndblockidFormatterStr != null) {
+			blobidAndblockidFormatter = blobidAndblockidFormatterStr;
 		}
 
-		String _MAX_BLOCK_BYTES = ConfigProperties.getProperty("storage.blob.block.bytes.max");
-		if (_MAX_BLOCK_BYTES != null) {
-			int i_MAX_BLOCK_BYTES = Integer.parseInt(_MAX_BLOCK_BYTES);
-			if (i_MAX_BLOCK_BYTES > 0 && i_MAX_BLOCK_BYTES <= 4194304) {
-				MAX_BLOCK_BYTES = i_MAX_BLOCK_BYTES;
+		String maxBlockBytesStr = ConfigProperties.getProperty("storage.blob.block.bytes.max");
+		if (maxBlockBytesStr != null) {
+			int maxBlockBytesStrInt = Integer.parseInt(maxBlockBytesStr);
+			if (maxBlockBytesStrInt > 0 && maxBlockBytesStrInt <= 4194304) {
+				maxBlockBytes = maxBlockBytesStrInt;
 			}
 		}
-
 	}
 
 	public int blobid = 1;
@@ -41,9 +40,9 @@ public class Block {
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block Constructor Begin");
 		}
-		this.blobid = 1;
-		this.blockid = 1;
-		this.blockdata = "";
+		blobid = 1;
+		blockid = 1;
+		blockdata = "";
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block Constructor End");
 		}
@@ -53,7 +52,7 @@ public class Block {
 		if (LogSetting.LOG_MESSAGE) {
 			logger.info("Block.addData Begin");
 		}
-		this.blockdata = this.blockdata + msg;
+		blockdata = blockdata + msg;
 		if (LogSetting.LOG_MESSAGE) {
 			logger.info("Block.addData End");
 		}
@@ -64,7 +63,7 @@ public class Block {
 			logger.info("Block.isMessageSizeWithnLimit Begin");
 		}
 		boolean result = false;
-		if (msg.getBytes().length <= MAX_BLOCK_BYTES) {
+		if (msg.getBytes().length <= maxBlockBytes) {
 			result = true;
 		}
 		if (LogSetting.LOG_MESSAGE) {
@@ -78,8 +77,8 @@ public class Block {
 			logger.info("Block.willMessageFitCurrentBlock Begin");
 		}
 		boolean result = false;
-		int byteSize = (this.blockdata + msg).getBytes().length;
-		if (byteSize <= MAX_BLOCK_BYTES) {
+		int byteSize = (blockdata + msg).getBytes().length;
+		if (byteSize <= maxBlockBytes) {
 			result = true;
 		}
 		if (LogSetting.LOG_MESSAGE) {
@@ -92,20 +91,20 @@ public class Block {
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block.upload Begin");
 		}
-		BlobWriter.upload(this.blobname, this.blockidStr, this.blockdata);
+		BlobWriter.upload(blobname, blockidStr, blockdata);
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("BlobState.upload End");
 		}
 	}
 
-	public void build(String blobname) {
+	public void build(String name) {
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block.build Begin");
 		}
-		this.blockdata = new String("");
-		this.blobname = blobname;
-		this.blockidStr = String.format(BLOCKID_FORMATTER, this.blockid);
-		this.blobidAndBlockidStr = String.format(BLOBID_BLOCKID_FORMATTER, this.blobid, this.blockid);
+		blockdata = new String("");
+		blobname = name;
+		blockidStr = String.format(blockidFormatter, blockid);
+		blobidAndBlockidStr = String.format(blobidAndblockidFormatter, blobid, blockid);
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block.build End");
 		}

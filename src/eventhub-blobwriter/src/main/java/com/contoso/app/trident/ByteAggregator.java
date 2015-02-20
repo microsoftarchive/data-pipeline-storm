@@ -17,29 +17,29 @@ import storm.trident.tuple.TridentTuple;
 public class ByteAggregator extends BaseAggregator<BlockState> {
 	private static final long serialVersionUID = 1L;
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(ByteAggregator.class);
-	private static String PARTITION_TXID_KEY_FORMATTER = "partition_%05d_transactionid";
-	private static String PARTITION_FIRSTBLOCK_KEY_FORMATTER = "partition_%05d_firstblock";
-	private static String PARTITION_LASTBLOCK_KEY_FORMATTER = "partition_%05d_lastblock";
+	private static String txidKeyFormatter = "partition_%05d_transactionid";
+	private static String firstblockKeyFormatter = "partition_%05d_firstblock";
+	private static String lastblockKeyFormatter = "partition_%05d_lastblock";
 
-	private long txid;
-	private int partitionIndex;
+	public long txid;
+	public int partitionIndex;
 	private long msgCount;
-	public static String partitionTxidKeyStr = null;
-	public static String partitionFirstblockKeyStr = null;
-	public static String partitionLastblockKeyStr = null;
-	
+	public String txidKey = null;
+	public String firstblockKey = null;
+	public String lastblockKey = null;
+
 	static {
-		String _PARTITION_TXID_KEY_FORMATTER = ConfigProperties.getProperty("PARTITION_TXID_KEY_FORMATTER");
-		if (_PARTITION_TXID_KEY_FORMATTER != null) {
-			PARTITION_TXID_KEY_FORMATTER = _PARTITION_TXID_KEY_FORMATTER; 
+		String txidKeyFormatterStr = ConfigProperties.getProperty("PARTITION_TXID_KEY_FORMATTER");
+		if (txidKeyFormatterStr != null) {
+			txidKeyFormatter = txidKeyFormatterStr;
 		}
-		String _PARTITION_FIRSTBLOCK_KEY_FORMATTER = ConfigProperties.getProperty("PARTITION_FIRSTBLOCK_KEY_FORMATTER");
-		if (_PARTITION_FIRSTBLOCK_KEY_FORMATTER != null) {
-			PARTITION_FIRSTBLOCK_KEY_FORMATTER = _PARTITION_FIRSTBLOCK_KEY_FORMATTER; 
+		String firstblockKeyFormatterStr = ConfigProperties.getProperty("PARTITION_FIRSTBLOCK_KEY_FORMATTER");
+		if (firstblockKeyFormatterStr != null) {
+			firstblockKeyFormatter = firstblockKeyFormatterStr;
 		}
-		String _PARTITION_LASTBLOCK_KEY_FORMATTER = ConfigProperties.getProperty("PARTITION_LASTBLOCK_KEY_FORMATTER");
-		if (_PARTITION_LASTBLOCK_KEY_FORMATTER != null) {
-			PARTITION_LASTBLOCK_KEY_FORMATTER = _PARTITION_LASTBLOCK_KEY_FORMATTER; 
+		String lastblockKeyFormatterStr = ConfigProperties.getProperty("PARTITION_LASTBLOCK_KEY_FORMATTER");
+		if (lastblockKeyFormatterStr != null) {
+			lastblockKeyFormatter = lastblockKeyFormatterStr;
 		}
 	}
 
@@ -54,89 +54,89 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 		if (LogSetting.LOG_BATCH) {
 			logger.info("prepare Begin");
 		}
-		this.partitionIndex = context.getPartitionIndex();
-		ByteAggregator.partitionTxidKeyStr = String.format(PARTITION_TXID_KEY_FORMATTER, partitionIndex);
-		ByteAggregator.partitionFirstblockKeyStr = String.format(PARTITION_FIRSTBLOCK_KEY_FORMATTER, partitionIndex);
-		ByteAggregator.partitionLastblockKeyStr = String.format(PARTITION_LASTBLOCK_KEY_FORMATTER, partitionIndex);
-		BlockStateStore.clearState(ByteAggregator.partitionTxidKeyStr, ByteAggregator.partitionFirstblockKeyStr,ByteAggregator.partitionLastblockKeyStr);
+		partitionIndex = context.getPartitionIndex();
+		txidKey = String.format(txidKeyFormatter, partitionIndex);
+		firstblockKey = String.format(firstblockKeyFormatter, partitionIndex);
+		lastblockKey = String.format(lastblockKeyFormatter, partitionIndex);
+		BlockStateStore.clearState(this);
 		super.prepare(conf, context);
 		if (LogSetting.LOG_BATCH) {
-			logger.info("p" + this.partitionIndex + ": prepare End");
+			logger.info("p" + partitionIndex + ": prepare End");
 		}
 	}
 
 	public BlockState init(Object batchId, TridentCollector collector) {
 		if (LogSetting.LOG_BATCH) {
-			logger.info("p" + this.partitionIndex + ": init End");
+			logger.info("p" + partitionIndex + ": init End");
 		}
 		if (batchId instanceof TransactionAttempt) {
-			this.txid = ((TransactionAttempt) batchId).getTransactionId();
+			txid = ((TransactionAttempt) batchId).getTransactionId();
 		} else {
 			throw new FailedException("Error configuring ByteAggregator");
 		}
 		msgCount = 0;
-		BlockState blockList = new BlockState(this.partitionIndex, this.txid);
+		BlockState blockState = new BlockState(this);
 		if (LogSetting.LOG_BATCH) {
-			logger.info(blockList.partitionTxidLogStr + "init End");
+			logger.info(blockState.partitionTxidLogStr + "init End");
 		}
-		return blockList;
+		return blockState;
 	}
 
-	public void aggregate(BlockState blockList, TridentTuple tuple, TridentCollector collector) {
+	public void aggregate(BlockState blockState, TridentTuple tuple, TridentCollector collector) {
 		if (LogSetting.LOG_MESSAGE) {
-			logger.info(blockList.partitionTxidLogStr + "aggregate Begin");
+			logger.info(blockState.partitionTxidLogStr + "aggregate Begin");
 		}
 		String tupleStr = tuple.getString(0);
 		if (tupleStr != null && tupleStr.length() > 0) {
 			if (LogSetting.LOG_MESSAGE) {
-				logger.info(blockList.partitionTxidLogStr + "Message= " + tupleStr);
+				logger.info(blockState.partitionTxidLogStr + "Message= " + tupleStr);
 			}
 			String msg = tupleStr + "\r\n";
 			if (Block.isMessageSizeWithnLimit(msg)) {
-				if (blockList.currentBlock.willMessageFitCurrentBlock(msg)) {
-					blockList.currentBlock.addData(msg);
+				if (blockState.currentBlock.willMessageFitCurrentBlock(msg)) {
+					blockState.currentBlock.addData(msg);
 				} else {
 					// since the new msg will not fit into the current block, we will upload the current block,
 					// and then get the next block, and add the new msg to the next block
-					blockList.currentBlock.upload();
-					blockList.needPersist = true;
+					blockState.currentBlock.upload();
+					blockState.needPersist = true;
 					if (LogSetting.LOG_MESSAGEROLLOVER) {
-						logger.info(blockList.partitionTxidLogStr + "Roll over from : blobname = " + blockList.currentBlock.blobname + ", blockid = "
-								+ blockList.currentBlock.blockid);
+						logger.info(blockState.partitionTxidLogStr + "Roll over from : blobname = " + blockState.currentBlock.blobname + ", blockid = "
+								+ blockState.currentBlock.blockid);
 					}
-					blockList.currentBlock = blockList.getNextBlock(blockList.currentBlock);
+					blockState.currentBlock = blockState.getNextBlock(blockState.currentBlock);
 					if (LogSetting.LOG_MESSAGEROLLOVER) {
-						logger.info(blockList.partitionTxidLogStr + "Roll over to:    blobname = " + blockList.currentBlock.blobname + ", blockid = "
-								+ blockList.currentBlock.blockid);
+						logger.info(blockState.partitionTxidLogStr + "Roll over to:    blobname = " + blockState.currentBlock.blobname + ", blockid = "
+								+ blockState.currentBlock.blockid);
 					}
-					blockList.currentBlock.addData(msg);
+					blockState.currentBlock.addData(msg);
 				}
 				msgCount++;
 			} else {
 				// message size is not within the limit, skip the message and log it.
-				logger.error(blockList.partitionTxidLogStr + "message skiped: message size exceeds the size limit, message= " + tupleStr);
+				logger.error(blockState.partitionTxidLogStr + "message skiped: message size exceeds the size limit, message= " + tupleStr);
 			}
 		}
 		if (LogSetting.LOG_MESSAGE) {
-			logger.info(blockList.partitionTxidLogStr + "aggregate End");
+			logger.info(blockState.partitionTxidLogStr + "aggregate End");
 		}
 	}
 
-	public void complete(BlockState blockList, TridentCollector collector) {
+	public void complete(BlockState blockState, TridentCollector collector) {
 		if (LogSetting.LOG_BATCH) {
-			logger.info(blockList.partitionTxidLogStr + "complete Begin");
+			logger.info(blockState.partitionTxidLogStr + "complete Begin");
 		}
-		if (blockList.currentBlock.blockdata.length() > 0) {
-			blockList.currentBlock.upload();
-			blockList.needPersist = true;
+		if (blockState.currentBlock.blockdata.length() > 0) {
+			blockState.currentBlock.upload();
+			blockState.needPersist = true;
 		}
-		if (blockList.needPersist) {
-			blockList.persistState();
+		if (blockState.needPersist) {
+			blockState.persistState();
 		}
 		collector.emit(new Values(msgCount));
 		if (LogSetting.LOG_BATCH) {
-			logger.info(blockList.partitionTxidLogStr + "message count = " + msgCount);
-			logger.info(blockList.partitionTxidLogStr + "complete End");
+			logger.info(blockState.partitionTxidLogStr + "message count = " + msgCount);
+			logger.info(blockState.partitionTxidLogStr + "complete End");
 		}
 	}
 }
