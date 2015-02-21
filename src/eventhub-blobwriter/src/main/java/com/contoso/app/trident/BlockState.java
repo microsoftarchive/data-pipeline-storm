@@ -4,22 +4,18 @@ package com.contoso.app.trident;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import backtype.storm.topology.FailedException;
+
 public class BlockState {
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(BlockState.class);
 
 	private static String blockLogFormatter = "partition=%05d_Txid=%05d:";
-	private static String blockNameFormatter = "partition_%05d/blob_%05d";
 	private static int maxNumberBlocks = 50000;
 	static {
 		String blockLogFormatterStr = ConfigProperties.getProperty("PARTITION_TXID_LOG_FORMATTER");
 		if (blockLogFormatterStr != null) {
 			blockLogFormatter = blockLogFormatterStr;
 		}
-		String blockNameFormatterStr = ConfigProperties.getProperty("BLOBNAME_FORMATTER");
-		if (blockNameFormatterStr != null) {
-			blockNameFormatter = blockNameFormatterStr;
-		}
-
 		String maxNumberBlocksStr = ConfigProperties.getProperty("storage.blob.block.number.max");
 		if (maxNumberBlocksStr != null) {
 			int maxNumberBlocksInt = Integer.parseInt(maxNumberBlocksStr);
@@ -31,19 +27,16 @@ public class BlockState {
 	public ByteAggregator byteAggregator;
 	public Block firstBlock;
 	public Block currentBlock;
-	public boolean needPersist = false;
 	public String partitionTxidLogStr;
-	private int partitionIndex;
-	public long txid;
 
 	public BlockState(ByteAggregator aggregator) {
 		byteAggregator = aggregator;
+		int partitionIndex = byteAggregator.partitionIndex;
+		long txid = byteAggregator.txid;
 		partitionTxidLogStr = String.format(blockLogFormatter, partitionIndex, txid);
 		if (LogSetting.LOG_BLOCK) {
 			logger.info(partitionTxidLogStr + "Constructor Begin");
 		}
-		partitionIndex = byteAggregator.partitionIndex;
-		txid = byteAggregator.txid;
 		String lastTxidStr = BlockStateStore.get(byteAggregator.txidKey);
 		if (lastTxidStr == null) {
 			// the very first time the topology is running
@@ -78,57 +71,56 @@ public class BlockState {
 		if (LogSetting.LOG_BLOCK) {
 			logger.info(partitionTxidLogStr + "getNewBlock Begin");
 		}
-		Block block = new Block();
-		String blobname = String.format(blockNameFormatter, partitionIndex, block.blobid);
-		block.build(blobname);
+		Block block = new Block(1, 1);
 		if (LogSetting.LOG_BLOCK) {
 			logger.info(partitionTxidLogStr + "getNewBlock End");
 		}
 		return block;
 	}
 
-	public Block getNextBlock(Block current) {
+	public Block getNextBlock(Block previous) {
+		Block block = null;
+		int blobid;
+		int blockid;
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("getNextBlock Begin");
 		}
-		Block block = new Block();
-		if (current.blockid < maxNumberBlocks) {
-			block.blobid = current.blobid;
-			block.blockid = current.blockid + 1;
+		if (previous.blockid < maxNumberBlocks) {
+			blobid = previous.blobid;
+			blockid = previous.blockid + 1;
 		} else {
-			block.blobid = current.blobid + 1;
-			block.blockid = 1;
+			blobid = previous.blobid + 1;
+			blockid = 1;
 		}
-		String blobname = String.format(blockNameFormatter, partitionIndex, block.blobid);
-		block.build(blobname);
+		block = new Block(blobid, blockid);
 		if (LogSetting.LOG_BLOCK) {
-			logger.info("getNextBlock returns blobid=" + block.blobid + ", blockid=" + block.blockid);
+			logger.info("getNextBlock returns blobid=" + blobid + ", blockid=" + blockid);
 			logger.info("getNextBlock End");
 		}
 		return block;
 	}
 
 	private Block getNextBlockAfterLastSuccessBatch() {
+		Block block = null;
 		if (LogSetting.LOG_BLOCK) {
 			logger.info(partitionTxidLogStr + "getNextBlockAfterLastSuccessBatch Begin");
 		}
-		Block block = new Block();
 		String lastBlockStr = BlockStateStore.get(byteAggregator.lastblockKey);
 		if (lastBlockStr != null) {
 			String[] strArray = lastBlockStr.split("_");
-			block.blobid = Integer.parseInt(strArray[0]);
-			block.blockid = Integer.parseInt(strArray[1]);
+			int blobid = Integer.parseInt(strArray[0]);
+			int blockid = Integer.parseInt(strArray[1]);
+			Block lastblock = new Block(blobid, blockid);
+			block = getNextBlock(lastblock);
 			if (LogSetting.LOG_BLOCK) {
 				logger.info(partitionTxidLogStr + " value for " + byteAggregator.lastblockKey + " is " + lastBlockStr);
 			}
 		} else {
 			if (LogSetting.LOG_BLOCK) {
-				logger.info(partitionTxidLogStr + " value for " + byteAggregator.lastblockKey + " is null or empty");
+				logger.error(partitionTxidLogStr + " value for " + byteAggregator.lastblockKey + " is null or empty");
+				throw new FailedException(partitionTxidLogStr + " value for " + byteAggregator.lastblockKey + " is null or empty");
 			}
 		}
-		String blobname = String.format(blockNameFormatter, partitionIndex, block.blobid);
-		block.build(blobname);
-		block = getNextBlock(block);
 		if (LogSetting.LOG_BLOCK) {
 			logger.info(partitionTxidLogStr + "getNextBlockAfterLastSuccessBatch returns blobid=" + block.blobid + ", blockid=" + block.blockid);
 			logger.info(partitionTxidLogStr + "getNextBlockAfterLastSuccessBatch End");
@@ -137,24 +129,23 @@ public class BlockState {
 	}
 
 	private Block getFirstBlockInLastFailedBatch() {
+		Block block = null;
 		if (LogSetting.LOG_BLOCK) {
 			logger.info(partitionTxidLogStr + "getFirstBlockInLastFailedBatch Begin");
 		}
-		Block block = new Block();
 		String firstBlockStr = BlockStateStore.get(byteAggregator.firstblockKey);
 		if (firstBlockStr != null) {
 			String[] strArray = firstBlockStr.split("_");
-			block.blobid = Integer.parseInt(strArray[0]);
-			block.blockid = Integer.parseInt(strArray[1]);
+			int blobid = Integer.parseInt(strArray[0]);
+			int blockid = Integer.parseInt(strArray[1]);
+			block = new Block(blobid, blockid);
 			if (LogSetting.LOG_BLOCK) {
 				logger.info(partitionTxidLogStr + " value for " + byteAggregator.firstblockKey + " is " + firstBlockStr);
 			}
-		} else {
-			logger.info(partitionTxidLogStr + " value for " + byteAggregator.firstblockKey + " is null or empty");
+		} else {			
+			logger.error(partitionTxidLogStr + " value for " + byteAggregator.firstblockKey + " is null or empty");
+			throw new FailedException(partitionTxidLogStr + " value for " + byteAggregator.firstblockKey + " is null or empty");
 		}
-		String blobname = String.format(blockNameFormatter, partitionIndex, block.blobid);
-		block.build(blobname);
-
 		if (LogSetting.LOG_BLOCK) {
 			logger.info(partitionTxidLogStr + "getFirstBlockInLastFailedBatch returns blobid=" + block.blobid + ", blockid=" + block.blockid);
 			logger.info(partitionTxidLogStr + "getFirstBlockInLastFailedBatch End");

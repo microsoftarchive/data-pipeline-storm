@@ -27,6 +27,7 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 	public String txidKey = null;
 	public String firstblockKey = null;
 	public String lastblockKey = null;
+	boolean needPersist = false;
 
 	static {
 		String txidKeyFormatterStr = ConfigProperties.getProperty("PARTITION_TXID_KEY_FORMATTER");
@@ -75,6 +76,7 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 			throw new FailedException("Error configuring ByteAggregator");
 		}
 		msgCount = 0;
+		needPersist = false;
 		BlockState blockState = new BlockState(this);
 		if (LogSetting.LOG_BATCH) {
 			logger.info(blockState.partitionTxidLogStr + "init End");
@@ -98,17 +100,12 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 				} else {
 					// since the new msg will not fit into the current block, we will upload the current block,
 					// and then get the next block, and add the new msg to the next block
-					blockState.currentBlock.upload();
-					blockState.needPersist = true;
+					blockState.currentBlock.upload(partitionIndex);
+					needPersist = true;
 					if (LogSetting.LOG_MESSAGEROLLOVER) {
-						logger.info(blockState.partitionTxidLogStr + "Roll over from : blobname = " + blockState.currentBlock.blobname + ", blockid = "
-								+ blockState.currentBlock.blockid);
+						logger.info(blockState.partitionTxidLogStr + " Message does not fit current block; rollover to next block");
 					}
 					blockState.currentBlock = blockState.getNextBlock(blockState.currentBlock);
-					if (LogSetting.LOG_MESSAGEROLLOVER) {
-						logger.info(blockState.partitionTxidLogStr + "Roll over to:    blobname = " + blockState.currentBlock.blobname + ", blockid = "
-								+ blockState.currentBlock.blockid);
-					}
 					blockState.currentBlock.addData(msg);
 				}
 				msgCount++;
@@ -126,11 +123,11 @@ public class ByteAggregator extends BaseAggregator<BlockState> {
 		if (LogSetting.LOG_BATCH) {
 			logger.info(blockState.partitionTxidLogStr + "complete Begin");
 		}
-		if (blockState.currentBlock.blockdata.length() > 0) {
-			blockState.currentBlock.upload();
-			blockState.needPersist = true;
+		if (blockState.currentBlock.blockdataSize > 0) {
+			blockState.currentBlock.upload(partitionIndex);
+			needPersist = true;
 		}
-		if (blockState.needPersist) {
+		if (needPersist) {
 			blockState.persistState();
 		}
 		collector.emit(new Values(msgCount));

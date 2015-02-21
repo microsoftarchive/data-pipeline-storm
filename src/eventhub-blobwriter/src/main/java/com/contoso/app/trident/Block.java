@@ -9,8 +9,15 @@ public class Block {
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(Block.class);
 	private static String blockidFormatter = "%05d";
 	private static String blobidAndblockidFormatter = "%05d_%05d";
+	private static String blockNameFormatter = "partition_%05d/blob_%05d";
+
 	private static int maxBlockBytes = 4194304;
 	static {
+		String blockNameFormatterStr = ConfigProperties.getProperty("BLOBNAME_FORMATTER");
+		if (blockNameFormatterStr != null) {
+			blockNameFormatter = blockNameFormatterStr;
+		}
+
 		String blockidFormatterStr = ConfigProperties.getProperty("BLOCKID_FORMATTER");
 		if (blockidFormatterStr != null) {
 			blockidFormatter = blockidFormatterStr;
@@ -29,20 +36,23 @@ public class Block {
 		}
 	}
 
-	public int blobid = 1;
-	public int blockid = 1;
-	public String blobname;
-	public String blockidStr;
+	public int blobid;
+	public int blockid;
+	public byte[] blockBytes;
 	public String blockdata;
+	public int blockdataSize; 
 	public String blobidAndBlockidStr;
 
-	public Block() {
+	public Block(int blobid, int blockid) {
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block Constructor Begin");
 		}
-		blobid = 1;
-		blockid = 1;
+		this.blobid = blobid;
+		this.blockid = blockid;
+		blockBytes = new byte[maxBlockBytes];
 		blockdata = "";
+		blockdataSize = 0;
+		blobidAndBlockidStr = String.format(blobidAndblockidFormatter, this.blobid, this.blockid);
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block Constructor End");
 		}
@@ -52,7 +62,11 @@ public class Block {
 		if (LogSetting.LOG_MESSAGE) {
 			logger.info("Block.addData Begin");
 		}
+		byte[] msgBytes = msg.getBytes();
+		int msgLength = msgBytes.length;
 		blockdata = blockdata + msg;
+		//System.arraycopy(msgBytes, 0, blockBytes, blockdataSize, msgLength);
+		blockdataSize += msgLength;
 		if (LogSetting.LOG_MESSAGE) {
 			logger.info("Block.addData End");
 		}
@@ -77,8 +91,8 @@ public class Block {
 			logger.info("Block.willMessageFitCurrentBlock Begin");
 		}
 		boolean result = false;
-		int byteSize = (blockdata + msg).getBytes().length;
-		if (byteSize <= maxBlockBytes) {
+		int newSize = blockdataSize + msg.getBytes().length;
+		if (newSize <= maxBlockBytes) {
 			result = true;
 		}
 		if (LogSetting.LOG_MESSAGE) {
@@ -87,26 +101,16 @@ public class Block {
 		return result;
 	}
 
-	public void upload() {
+	public void upload(int partitionIndex) {
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("Block.upload Begin");
 		}
+		String blobname = String.format(blockNameFormatter, partitionIndex, blobid);
+		String blockidStr = String.format(blockidFormatter, blockid);
+		//BlobWriter.upload(blobname, blockidStr, blockBytes.toString().substring(0, blockdataSize));
 		BlobWriter.upload(blobname, blockidStr, blockdata);
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("BlobState.upload End");
-		}
-	}
-
-	public void build(String name) {
-		if (LogSetting.LOG_BLOCK) {
-			logger.info("Block.build Begin");
-		}
-		blockdata = new String("");
-		blobname = name;
-		blockidStr = String.format(blockidFormatter, blockid);
-		blobidAndBlockidStr = String.format(blobidAndblockidFormatter, blobid, blockid);
-		if (LogSetting.LOG_BLOCK) {
-			logger.info("Block.build End");
 		}
 	}
 }

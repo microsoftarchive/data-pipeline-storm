@@ -115,7 +115,7 @@ public class BlockStateStore {
 				logger.info("setState Begin");
 			}
 			String kTxid = blockState.byteAggregator.txidKey;
-			String vTxid = String.valueOf(blockState.txid);
+			String vTxid = String.valueOf(blockState.byteAggregator.txid);
 			String kFirstBlock = blockState.byteAggregator.firstblockKey;
 			String vFirstBlock = blockState.firstBlock.blobidAndBlockidStr;
 			String kLastBlock = blockState.byteAggregator.lastblockKey;

@@ -49,7 +49,9 @@ public class BlobWriter {
 				logger.info("upload Begin");
 				logger.info("upload blobname = " + blobname);
 				logger.info("upload blockIdStr = " + blockIdStr);
-				logger.info("upload data= \r\n" + data);
+			}
+			if (LogSetting.LOG_BLOBWRITERDATA) {
+				logger.info("upload data= \r\n" + data);				
 			}
 			CloudBlockBlob blockBlob = container.getBlockBlobReference(blobname);
 			BlobRequestOptions blobOptions = new BlobRequestOptions();
