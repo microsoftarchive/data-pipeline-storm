@@ -38,8 +38,7 @@ public class Block {
 
 	public int blobid;
 	public int blockid;
-	public byte[] blockBytes;
-	public String blockdata;
+	public StringBuilder blockdata;
 	public int blockdataSize; 
 	public String blobidAndBlockidStr;
 
@@ -49,8 +48,7 @@ public class Block {
 		}
 		this.blobid = blobid;
 		this.blockid = blockid;
-		blockBytes = new byte[maxBlockBytes];
-		blockdata = "";
+		blockdata = new StringBuilder(maxBlockBytes);
 		blockdataSize = 0;
 		blobidAndBlockidStr = String.format(blobidAndblockidFormatter, this.blobid, this.blockid);
 		if (LogSetting.LOG_BLOCK) {
@@ -62,11 +60,8 @@ public class Block {
 		if (LogSetting.LOG_MESSAGE) {
 			logger.info("Block.addData Begin");
 		}
-		byte[] msgBytes = msg.getBytes();
-		int msgLength = msgBytes.length;
-		blockdata = blockdata + msg;
-		//System.arraycopy(msgBytes, 0, blockBytes, blockdataSize, msgLength);
-		blockdataSize += msgLength;
+		blockdata.append(msg);
+		blockdataSize += msg.getBytes().length;
 		if (LogSetting.LOG_MESSAGE) {
 			logger.info("Block.addData End");
 		}
@@ -107,8 +102,7 @@ public class Block {
 		}
 		String blobname = String.format(blockNameFormatter, partitionIndex, blobid);
 		String blockidStr = String.format(blockidFormatter, blockid);
-		//BlobWriter.upload(blobname, blockidStr, blockBytes.toString().substring(0, blockdataSize));
-		BlobWriter.upload(blobname, blockidStr, blockdata);
+		BlobWriter.upload(blobname, blockidStr, blockdata.toString());
 		if (LogSetting.LOG_BLOCK) {
 			logger.info("BlobState.upload End");
 		}
