@@ -58,8 +58,9 @@ mvn clean install -Dmaven.test.skip=true
 > *This also applies to the other commands in this document.*
 
 ### Install Microsoft Azure Storage libraries for Java
-- Clone [Microsoft Azure Storage libraries for Java](https://github.com/Azure/azure-storage-java)
-- Use the following command to install the package into the local Maven store. This will allow us to easily add it as a reference in the Storm project in a later step.
+- Clone [Microsoft Azure Storage libraries for Java][azure-storage-java]
+- Use the following command to install the package into the local Maven store.
+  This will allow you to easily add it as a reference in the Storm project in a later step.
 
 ```
 mvn clean install -Dmaven.test.skip=true
@@ -233,6 +234,7 @@ bin\storm kill MyTopologyName
 [azure-java]: https://github.com/Azure/azure-sdk-for-java
 [azure-storm]: http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-getting-started/#provision-a-storm-cluster-on-the-azure-portal
 [azure-storage]: http://azure.microsoft.com/en-us/documentation/articles/storage-create-storage-account/
+[azure-storage-java]: https://github.com/Azure/azure-storage-java
 [git]: http://git-scm.com/
 [java-dl]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [maven-dl]: http://maven.apache.org/download.cgi
