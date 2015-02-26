@@ -32,7 +32,10 @@ devices | Send
 storm   | Listen
 
 ### Create the HDInsight Storm cluster
-- Sign in to the azure and create a storm cluster
+- Create an Azure HDInsight Storm cluster.  
+  *Refer to the "Provision a Storm cluster on the Azure portal" section of [Getting started using Storm on HDInsight][azure-storm]
+  for instructions.*
+  
 
 ## Install Java Dependencies
 
@@ -219,6 +222,7 @@ bin\storm kill MyTopologyName
 [azure]: http://azure.microsoft.com/
 [azure-dl]: http://azure.microsoft.com/en-us/downloads/
 [azure-eventhubs]: http://azure.microsoft.com/en-us/documentation/articles/service-bus-event-hubs-csharp-ephcs-getstarted/#create-an-event-hub
+[azure-storm]: http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-getting-started/#provision-a-storm-cluster-on-the-azure-portal
 [azure-storage]: http://azure.microsoft.com/en-us/documentation/articles/storage-create-storage-account/
 [git]: http://git-scm.com/
 [java-dl]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
