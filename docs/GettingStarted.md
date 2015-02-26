@@ -1,7 +1,7 @@
 # Getting Started with the Reference Implementation
 Store Event Hub Messages to Microsoft Azure Blob with Trident
 
-[Microsoft patterns & practices](http://aka.ms/mspnp)
+[Microsoft patterns & practices][pnp]
 
 ## Prerequisites
 - [An Azure subscription][azure]
@@ -219,4 +219,5 @@ bin\storm kill MyTopologyName
 [git]: http://git-scm.com/
 [java-dl]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [maven-dl]: http://maven.apache.org/download.cgi
+[pnp]: http://aka.ms/mspnp
 [vs]: http://www.visualstudio.com/en-us/products/visual-studio-community-vs
