@@ -4,11 +4,11 @@ Store Event Hub Messages to Microsoft Azure Blob with Trident
 [Microsoft patterns & practices](http://aka.ms/mspnp)
 
 ## Prerequisites
-- An Azure subscription
-- Java and JDK
-- Maven
-- Visual Studio with the Microsoft Azure SDK for .NET
-- Git tool
+- [An Azure subscription][azure]
+- [Java JDK][java-dl] (We've used JDK7)
+- [Maven][maven-dl]
+- [Visual Studio][vs] with the [Microsoft Azure SDK for .NET][azure-dl]
+- A [Git][git] client
 
 ## Configure Microsoft Azure
 
@@ -211,3 +211,10 @@ Start [Azure Storage Explorer](https://azurestorageexplorer.codeplex.com/). Clic
 ```
 bin\storm kill MyTopologyName  
 ```
+
+[azure]: http://azure.microsoft.com/
+[azure-dl]: http://azure.microsoft.com/en-us/downloads/
+[git]: http://git-scm.com/
+[java-dl]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
+[maven-dl]: http://maven.apache.org/download.cgi
+[vs]: http://www.visualstudio.com/en-us/products/visual-studio-community-vs
