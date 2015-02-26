@@ -68,9 +68,11 @@ mvn clean install -Dmaven.test.skip=true
 
 ### Install the Event Hub spout
 In order to receive data from Event Hub, we will use the eventhubs-storm-spout.
-- Use Remote Desktop to connect to your Storm cluster, then copy the
-%STORM_HOME%\examples\eventhubspout\eventhubs-storm-spout-0.9-jar-with-dependencies.jar file to your local development environment.
-- Use the following command to install the package into the local Maven store. This will allow us to easily add it as a reference in the Storm project in a later step.
+- Use Remote Desktop to connect to your Storm cluster.  You can connect easily from the HDInsight section of the Azure Management Portal.
+- Through the remote desktop session, copy the `eventhubs-storm-spout-0.9-jar-with-dependencies.jar` file,
+  located at `%STORM_HOME%\examples\eventhubspout`, to a folder on your local machine.
+- On your local machine, use the following command to install the package into the local Maven store.
+  This will allow us to easily add it as a reference in the Storm project in a later step.
 
 ```
 mvn install:install-file -Dfile=eventhubs-storm-spout-0.9-jar-with-dependencies.jar -DgroupId=com.microsoft.eventhubs -DartifactId=eventhubs-storm-spout -Dversion=0.9 -Dpackaging=jar
