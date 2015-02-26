@@ -13,7 +13,8 @@ Store Event Hub Messages to Microsoft Azure Blob with Trident
 ## Configure Microsoft Azure
 
 ### Create the Azure Storage Account
-- Create Azure Storage account
+- Create an Azure Storage account. 
+  *Refer to [Create a storage account][azure-storage] for instructions.*
 
 ### Create the Azure Redis Cache
 - Create Azure Redis Cache following [How to Use Azure Redis Cache](http://azure.microsoft.com/en-us/documentation/articles/cache-dotnet-how-to-use-azure-redis-cache/ )
@@ -214,6 +215,7 @@ bin\storm kill MyTopologyName
 
 [azure]: http://azure.microsoft.com/
 [azure-dl]: http://azure.microsoft.com/en-us/downloads/
+[azure-storage]: http://azure.microsoft.com/en-us/documentation/articles/storage-create-storage-account/
 [git]: http://git-scm.com/
 [java-dl]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [maven-dl]: http://maven.apache.org/download.cgi
