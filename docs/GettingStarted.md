@@ -86,11 +86,6 @@ mvn install:install-file -Dfile=eventhubs-storm-spout-0.9-jar-with-dependencies.
 mvn clean install -Dmaven.test.skip=true
 ```
 
-## Open eventhub-blobwriter in Eclipse (optional)
-* Start Eclipse IDE
-* Switch Workspace to \data-pipeline-storm\src folder
-* import Existing Maven Project: /eventhub-blobwriter/pom.xml
-* You should see a list of java files under srcmain/java folder for package com.contoso.app.trident
 ## Clone the source code of the Reference Implementation
 If you haven't already, clone the [data-pipeline-storm][pnp-storm] project (this project).
 Or, if you wish to commit changes, then fork this repository and clone your fork.
@@ -103,6 +98,35 @@ There are two projects in the `src` directory.
   The document [Create Java Topology project eventhub-blobwriter from Scratch][walkthrough]
   walks you through the steps of how the above project was created.
 
+## Open eventhub-blobwriter in an IDE (optional)
+
+You can choose to import the project into an IDE.  We've tested under Eclipse and IntelliJ.
+
+#### [Eclipse IDE][eclipse-dl]
+- Start Eclipse IDE
+- Select *File* - *Switch Workspace* - *Other...*
+- Choose the `data-pipeline-storm/src` folder.  Click *OK*. Eclipse will restart.
+- Select *File* - *Import...*.  Then select *Maven* - *Existing Maven Projects*.  Click *Next*.
+- Choose `data-pipeline-storm/src` for the root directory.
+- Select `/eventhub-blobwriter/pom.xml` from the projects list,  Click *Finish*.
+- You should be able to find the project's `.java` files in the Package Explorer, under the `src/main/java` folder,
+  in the `com.contoso.app.trident` package.
+
+#### [IntelliJ IDEA][intellij-dl]
+- Start IntelliJ IDEA
+- Click *Import Project*
+- Choose the `data-pipeline-storm/src/eventhub-blobwriter` folder.  Click *OK*.
+- Select *Import  project from external model* and choose *Maven*.  Click *Next*.
+- Adjust the project import settings if desired.  (The defaults will work fine.)  Click *Next*.
+- The eventhub-blobwriter Maven project should be selected by default. Click *Next*.
+- Choose your JDK version.  (We've tested under 1.7.) Click *Next*.
+- Click Finish.
+- You should be able to find the project's `.java` files in the Project window, under the `src/main/java` folder,
+  in the `com.contoso.app.trident` package.
+
+> *IntelliJ may prompt you with "Unregistered Vcs root detected".  
+> If you plan to make changes and are  working against your own fork, then click "Add root"
+> to enable Git integration.  Otherwise, click "Ignore".*
 
 ## Modify the configurations
 
@@ -244,7 +268,9 @@ bin\storm kill MyTopologyName
 [azure-storm]: http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-getting-started/#provision-a-storm-cluster-on-the-azure-portal
 [azure-storage]: http://azure.microsoft.com/en-us/documentation/articles/storage-create-storage-account/
 [azure-storage-java]: https://github.com/Azure/azure-storage-java
+[eclipse-dl]: https://www.eclipse.org/downloads/
 [git]: http://git-scm.com/
+[intellij-dl]: https://www.jetbrains.com/idea/download/
 [java-dl]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [maven-dl]: http://maven.apache.org/download.cgi
 [pnp]: http://aka.ms/mspnp
