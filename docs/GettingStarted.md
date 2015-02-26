@@ -51,6 +51,12 @@ then installed into the local Maven repository on your development environment.
 mvn clean install -Dmaven.test.skip=true
 ```
 
+> *If you are in a Powershell window, you will need to escape any arguments that start with a hyphen, using a backtick as follows:*
+>
+>     mvn clean install `-Dmaven.test.skip=true
+> 
+> *This also applies to the other commands in this document.*
+
 ### Install Microsoft Azure Storage libraries for Java
 - Clone [Microsoft Azure Storage libraries for Java](https://github.com/Azure/azure-storage-java)
 - Use the following command to install the package into the local Maven store. This will allow us to easily add it as a reference in the Storm project in a later step.
