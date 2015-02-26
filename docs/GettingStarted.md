@@ -20,8 +20,11 @@ Store Event Hub Messages to Microsoft Azure Blob with Trident
 - Create Azure Redis Cache following [How to Use Azure Redis Cache](http://azure.microsoft.com/en-us/documentation/articles/cache-dotnet-how-to-use-azure-redis-cache/ )
 
 ### Configure Event Hub
-- Create Event Hub with partition count 10 and message retention of 1 days.
-- Once the event hub has been created, select the event hub you created. Select *Configure*, then create two new *shared access policies* using the following information.
+- Create an Azure Service Bus Event Hub with partition count 10 and message retention of 1 days.  
+  *Refer to the "Create an Event Hub" section of [Get started with Event Hubs][azure-eventhubs] for instructions.*
+
+- Once the event hub has been created, use the Azure Management Portal to select the event hub instance. 
+  Select *Configure*, then create two new *shared access policies* using the following information.
 
 NAME    | PERMISSIONS
 ----    | -----------
@@ -215,6 +218,7 @@ bin\storm kill MyTopologyName
 
 [azure]: http://azure.microsoft.com/
 [azure-dl]: http://azure.microsoft.com/en-us/downloads/
+[azure-eventhubs]: http://azure.microsoft.com/en-us/documentation/articles/service-bus-event-hubs-csharp-ephcs-getstarted/#create-an-event-hub
 [azure-storage]: http://azure.microsoft.com/en-us/documentation/articles/storage-create-storage-account/
 [git]: http://git-scm.com/
 [java-dl]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
