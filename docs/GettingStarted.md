@@ -39,11 +39,13 @@ storm   | Listen
 
 ## Install Java Dependencies
 
-Several of the dependencies in *eventhub-blobwriter* java storm project must be downloaded and built individually, then installed into the local Maven repository on your development environment.
+Several of the dependencies in *eventhub-blobwriter* java storm project must be downloaded and built individually,
+then installed into the local Maven repository on your development environment.
 
 ### Install Microsoft Azure SDK for Java
-- Clone [Microsoft Azure SDK for Java](https://github.com/Azure/azure-sdk-for-java)
-- Use the following command to install the package into the local Maven store. This will allow us to easily add it as a reference in the Storm project in a later step.
+- Clone [Microsoft Azure SDK for Java][azure-java]
+- Use the following command to install the package into the local Maven store.
+  This will allow you to easily add it as a reference in the Storm project in a later step.
 
 ```
 mvn clean install -Dmaven.test.skip=true
@@ -222,6 +224,7 @@ bin\storm kill MyTopologyName
 [azure]: http://azure.microsoft.com/
 [azure-dl]: http://azure.microsoft.com/en-us/downloads/
 [azure-eventhubs]: http://azure.microsoft.com/en-us/documentation/articles/service-bus-event-hubs-csharp-ephcs-getstarted/#create-an-event-hub
+[azure-java]: https://github.com/Azure/azure-sdk-for-java
 [azure-storm]: http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-getting-started/#provision-a-storm-cluster-on-the-azure-portal
 [azure-storage]: http://azure.microsoft.com/en-us/documentation/articles/storage-create-storage-account/
 [git]: http://git-scm.com/
