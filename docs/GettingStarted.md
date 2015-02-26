@@ -85,17 +85,24 @@ mvn install:install-file -Dfile=eventhubs-storm-spout-0.9-jar-with-dependencies.
 ```
 mvn clean install -Dmaven.test.skip=true
 ```
-## Clone the source code of the Reference Implementation
-Clone the code from https://github.com/mspnp/storm-trident.git. There are two projects in the src directory.
-* SendEvents: C# Console App which send messages to Azure Event Hub
-* eventhub-blobwriter: The java implementation of Strom/Trident topology.
-The document [Create Java Topology project eventhub-blobwriter from Scratch](/docs/step-by-step-walkthrough.md) walks you through the steps on how the above project is created.
 
 ## Open eventhub-blobwriter in Eclipse (optional)
 * Start Eclipse IDE
 * Switch Workspace to \data-pipeline-storm\src folder
 * import Existing Maven Project: /eventhub-blobwriter/pom.xml
 * You should see a list of java files under srcmain/java folder for package com.contoso.app.trident
+## Clone the source code of the Reference Implementation
+If you haven't already, clone the [data-pipeline-storm][pnp-storm] project (this project).
+Or, if you wish to commit changes, then fork this repository and clone your fork.
+
+There are two projects in the `src` directory.
+
+- **SendEvents:** A .NET console application written in C# that sends messages to an Azure Event Hub.
+
+- **eventhub-blobwriter:** The Java implementation of Storm/Trident topology.  
+  The document [Create Java Topology project eventhub-blobwriter from Scratch][walkthrough]
+  walks you through the steps of how the above project was created.
+
 
 ## Modify the configurations
 
@@ -241,4 +248,6 @@ bin\storm kill MyTopologyName
 [java-dl]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [maven-dl]: http://maven.apache.org/download.cgi
 [pnp]: http://aka.ms/mspnp
+[pnp-storm]: https://github.com/mspnp/data-pipeline-storm
 [vs]: http://www.visualstudio.com/en-us/products/visual-studio-community-vs
+[walkthrough]: /docs/step-by-step-walkthrough.md
