@@ -205,40 +205,49 @@ To run on your development machine, use the following steps.
   - The container will be named `eventhubblobwriter`, followed by the time that the topology was started.
   - Note: You will get a new container every time you restart the topology.
 
+### Run the topology in the HDInsight Storm Cluster
+In your development environment, use the following steps to run the topology on your HDInsight Storm cluster.
 
+- Start the SendEvent .NET application to begin sending events, so that the topology has something to read from Event Hub.
+- Change to the `/src/eventhub-blobwriter` folder if you aren't already there.
+- Use the following command to ask Maven to create a JAR package from your project.
 
+        mvn clean package -Dstorm.scope=provided
 
-### Run the topology in HDInsight Storm Cluster
-On your development environment, use the following steps to run the Temperature topology on your HDInsight Storm Cluster.
-- Use the following command to create a JAR package from your project.
+  This will create a file named `eventhub-blobwriter-1.0-SNAPSHOT.jar` in the `target` subdirectory of your project.
 
-```
-mvn package -Dstorm.scope=provided
-```
+- Deploy the jar file to your HDInsight Storm cluster through the Storm Dashboard in the Azure Management Portal.
+  This is also described in the document: [Deploy and manage Apache Storm topologies on HDInsight][azure-storm-deploy].
+  - Sign in to the Storm Dashboard through the Azure Management Portal.
+  - In the "Jar File" dropdown, select "Upload new Jar - Browse", then choose the jar file you created with Maven in the previous step.
+  - In the "Class Name" field, enter `com.contoso.app.trident.BlobWriterTopology`
+  - In the "Additional Parameters" field, enter any name you would like to use to identify the topology.
+    For example, `MyBlobWriterTopology`.  This will show up in the Storm portal and a few other places, and will help you to
+    distinguish one topology from the next.
+  - Click Submit, and wait for your topology to be submitted.
 
-This will create a file named eventhub-blobwriter-1.0-SNAPSHOT.jar in the target directory of your project.
-- On your local development machine, start the SendEvents .NET application, so that we have some events to read.
-- Connect to your HDInsight Storm cluster using Remote Desktop, and copy the eventhub-blobwriter-1.0-SNAPSHOT.jar file to the c:\apps\dist\storm-0.9.1.2.1.10.0-2290 directory.
-- Use the **Storm Command Line** icon on the cluster desktop to open a new storm command prompt, and use the following commands to run the topology.
+- Verify that the message are uploaded to azure blob.
+  - Download, install, and start [Azure Storage Explorer][azure-storage-explorer].
+  - Click **refresh** button and then click on the container for the uploaded blobs.
+  - The container will be named `eventhubblobwriter`, followed by the time that the topology was started.
+  - Note: You will get a new container every time you restart the topology.
 
-```
-bin\storm jar eventhub-blobwriter-1.0-SNAPSHOT.jar com.contoso.app.trident.BlobWriterTopology  MyTopologyName  
-```
-
-- To verify that the message are uploaded to azure blob.
-Start [Azure Storage Explorer](https://azurestorageexplorer.codeplex.com/). Click **refresh** button and then click on the container for the uploaded blobs.
-
-- To stop the topology, go to the Remote Desktop session with the Storm cluster and enter the following in the HDInsight Command Line.
-
-```
-bin\storm kill MyTopologyName  
-```
+- You can control the topology by using the buttons in the Storm Dashboard.
+  - Select the "Storm UI" tab.
+  - Click the link for your topology under the "Topology Summary" section.
+  - Use the buttons under "Topology actions"
+    - `Deactivate` will pause the topology.
+    - `Activate` will restart the toplogy.
+    - `Kill` will terminate the toplogy completely.
+    - `Rebalance` should be used after adjusting the number of nodes in the cluster.
+      See [Understanding the Parallelism of a Storm Topology][storm-parallel] for more information.
 
 [azure]: http://azure.microsoft.com/
 [azure-dl]: http://azure.microsoft.com/en-us/downloads/
 [azure-eventhubs]: http://azure.microsoft.com/en-us/documentation/articles/service-bus-event-hubs-csharp-ephcs-getstarted/#create-an-event-hub
 [azure-java]: https://github.com/Azure/azure-sdk-for-java
 [azure-storm]: http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-getting-started/#provision-a-storm-cluster-on-the-azure-portal
+[azure-storm-deploy]: http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-deploy-monitor-topology/
 [azure-storage]: http://azure.microsoft.com/en-us/documentation/articles/storage-create-storage-account/
 [azure-storage-explorer]: https://azurestorageexplorer.codeplex.com/
 [azure-storage-java]: https://github.com/Azure/azure-storage-java
@@ -249,5 +258,6 @@ bin\storm kill MyTopologyName
 [maven-dl]: http://maven.apache.org/download.cgi
 [pnp]: http://aka.ms/mspnp
 [pnp-storm]: https://github.com/mspnp/data-pipeline-storm
+[storm-parallel]: http://storm.apache.org/documentation/Understanding-the-parallelism-of-a-Storm-topology.html
 [vs]: http://www.visualstudio.com/en-us/products/visual-studio-community-vs
 [walkthrough]: /docs/step-by-step-walkthrough.md
