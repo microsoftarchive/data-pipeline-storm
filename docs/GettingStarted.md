@@ -131,8 +131,10 @@ You can choose to import the project into an IDE.  We've tested under Eclipse an
 ## Modify the configurations
 
 ### Modify Config.properties
-Open the `Config.properties` file under the `/eventhub-blobwriter/conf` folder.  
-Set the following values according to your configuration settings:
+
+- Open the `/eventhub-blobwriter/conf` folder.
+- Copy the `Config.properties.template` file to a new file called `Config.properties`.
+- Open the `Config.properties` file, and set the following values according to your configuration settings:
 
 ```
 eventhubspout.password = [shared access key for the "storm" policy of your event hub]
@@ -161,8 +163,10 @@ LOG_REDIS = false
 
 ### Modify Configuration for SendEvent
 
-Start Visual Studio, and open the `SendEvents.sln` solution, under the `data-pipeline-storm/src/SendEvents` folder.
-Open the `App.config` file, and set the values according to your configuration settings:
+- Using the Windows file explorer, browse to the `data-pipeline-storm/src/SendEvents/SendEvents` folder.
+- Copy the `App.config.template` file to a new file called `App.config`
+- Start Visual Studio, and open the `SendEvents.sln` solution, under the `data-pipeline-storm/src/SendEvents` folder.
+- Open the `App.config` file, and set the values according to your configuration settings:
 
 ``` xml
 <add key="EventHubName" value="[your event hub name]"/>
