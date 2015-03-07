@@ -174,25 +174,37 @@ Open the `App.config` file, and set the values according to your configuration s
 
 ## Run the topology
 
-### Run the topology on development machin
+### Run the topology on development machine
 
 To run on your development machine, use the following steps.
-- Start the SendEvent .NET application to begin sending events, so that you have something to read from Event Hub.
-- Start the topology locally Option 1:
-In eclipse, open the eventhub-blobwriter package, and then open BlobWriterTopology.java file. Press F11 to start the topology.
-This will start the topology, read messages from Event Hub, and upload them to azure blob storage.
+- Start the SendEvent .NET application to begin sending events, so that the topology has something to read from Event Hub.
+- Start the topology locally. This will read messages from Event Hub and upload them to azure blob storage.
+
+  **Option 1 - Run from the command line**
+  - You can also start the topology by running the following command line from the `/src/eventhub-blobwriter` folder:
+
+        mvn compile exec:java -Dstorm.topology=com.contoso.app.trident.BlobWriterTopology
+
+  - You can stop the topology by pressing Ctrl-C.
+
+  **Option 2 - Run from Eclipse**  
+  - Open the `BlobWriterTopology.java` file.
+  - Run the topology.  (Press Ctrl-F11.)
+  - Top stop the topology, press the red *Terminate* icon in the Console window.
+
+  **Option 3 - Run from IntelliJ**
+  - Open the `BlobWriterTopology.java` file.
+  - Click `Run...` from the `Run` menu.
+    - It will ask you to create the run configuration.  You can simply select the default "BlobWriterTopology.java" configuration.
+    - The topology should start in the Run window.
+  - Top stop the topology, press the red *Terminate* icon in the Run window.
+
 - Verify that the message are uploaded to azure blob.
-Start [Azure Storage Explorer](https://azurestorageexplorer.codeplex.com/). Click **refresh** button and then click on the container for the uploaded blobs.
-- Note: to restart the topology, you need to delete the existing blobs. A simple way is just delete the container each time you start the topology.
+  - Download, install, and start [Azure Storage Explorer][azure-storage-explorer].
+  - Click **refresh** button and then click on the container for the uploaded blobs.
+  - The container will be named `eventhubblobwriter`, followed by the time that the topology was started.
+  - Note: You will get a new container every time you restart the topology.
 
-- Start the topology locally Option 2:
-You can also start the topology by running the following command line:
-
-```
-mvn compile exec:java  -Dstorm.topology=com.contoso.app.trident.BlobWriterTopology
-```
-
-You can stop the topology by entering Ctrl-C.
 
 
 
@@ -201,7 +213,7 @@ On your development environment, use the following steps to run the Temperature 
 - Use the following command to create a JAR package from your project.
 
 ```
-mvn package
+mvn package -Dstorm.scope=provided
 ```
 
 This will create a file named eventhub-blobwriter-1.0-SNAPSHOT.jar in the target directory of your project.
@@ -228,6 +240,7 @@ bin\storm kill MyTopologyName
 [azure-java]: https://github.com/Azure/azure-sdk-for-java
 [azure-storm]: http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-getting-started/#provision-a-storm-cluster-on-the-azure-portal
 [azure-storage]: http://azure.microsoft.com/en-us/documentation/articles/storage-create-storage-account/
+[azure-storage-explorer]: https://azurestorageexplorer.codeplex.com/
 [azure-storage-java]: https://github.com/Azure/azure-storage-java
 [eclipse-dl]: https://www.eclipse.org/downloads/
 [git]: http://git-scm.com/
