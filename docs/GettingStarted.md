@@ -131,84 +131,45 @@ You can choose to import the project into an IDE.  We've tested under Eclipse an
 ## Modify the configurations
 
 ### Modify Config.properties
-Open Config.properties file under conf folder in eventhub-blobwriter project. Modify the values according to your setting:
+Open the `Config.properties` file under the `/eventhub-blobwriter/conf` folder.  
+Set the following values according to your configuration settings:
 
 ```
-eventhubspout.username = storm
-# shared access key for the above event hub policy
-eventhubspout.password = [shared access key for the above event hub read policy]
-eventhubspout.namespace = [YourServicebusNamespace]
-eventhubspout.entitypath = [YourEventhubName]
-eventhubspout.partitions.count = 10
-# if not provided, will use storm's zookeeper settings
-# zookeeper.connectionstring=localhost:2181
-eventhubspout.checkpoint.interval = 10
-eventhub.receiver.credits = 1024
-storage.blob.account.name = [YourStorageAccountName]
-storage.blob.account.key =[YourStorageAccountKey]
-storage.blob.account.container = [YourStorageAccountContainerName]
-#number of blocks in each blob default to 50000
-storage.blob.block.number.max = 50000
-#max bytes in each block default to 4194304 Byte
-storage.blob.block.bytes.max = 4194304
-#Redis cache
-redis.host = [YourRedisName].redis.cache.windows.net
-redis.password = [YourRedisKey]
-redis.port = 6380
-redis.timeout = 3600
-#string format
-blobidBlockidStrFormat = %05d_%05d
-blobNameFormat = aaa/blobwriter/%05d/%05d
-blockIdStrFormat = %05d
-partitionTxidLogStrFormat = partition=%05d_Txid=%05d:
-partitionTxidKeyStrFormat = p_%05d_Txid
-partitionBlocklistKeyStrFormat = p_%05d__Blocklist
+eventhubspout.password = [shared access key for the "storm" policy of your event hub]
+eventhubspout.namespace = [your service bus namespace]
+eventhubspout.entitypath = [your event hub name]
+
+storage.blob.account.name = [your storage account name]
+storage.blob.account.key = [your storage account key]
+
+redis.host = [your redis host name].redis.cache.windows.net
+redis.password = [your redis access key]
 ```
 
-### Modify LogSetting class
+If desired, you can enable logging for any of the items listed in the `LogSettings` section.
+All logging is turned off by default.  Change a setting to `true` to turn on logging for that item.
 
-Modify LogSetting.java in directory \eventhub-blobwriter\src\main\java\com\contoso\app\trident\ to fit your needs.
-
-``` java
-package com.contoso.app.trident;
-public final class LogSetting {
-	public static final boolean LOG_MESSAGE = false;
-	public static final boolean LOG_BATCH = false;
-	public static final boolean LOG_CONSTRUCTOR = false;
-	public static final boolean LOG_BLOCK_ROLL_OVER = false;
-	public static final boolean LOG_BLOCK = false;
-	public static final boolean LOG_PERSIST = false;
-	public static final boolean LOG_GET_LAST_BLOCK = false;
-	public static final boolean LOG_GET_FIRST_BLOCK = false;
-	public static final boolean LOG_BLOB_WRITER = false;
-	public static final boolean LOG_BLOB_WRITER_DATA = false;
-	public static final boolean LOG_BLOB_WRITER_BLOCKLIST_BEFORE_UPLOAD = false;
-	public static final boolean LOG_BLOB_WRITER_BLOCKLIST_AFTER_UPLOAD = false;
-	public static final boolean LOG_REDIS = false;
-	public static final boolean LOG_METHOD_BEGIN = false;
-	public static final boolean LOG_METHOD_END = false;
-	public static final boolean LOG_TRANSACTION = true;
-}
+```
+LOG_BATCH = false
+LOG_MESSAGE = false
+LOG_MESSAGEROLLOVER = false
+LOG_BLOCK = false
+LOG_BLOBWRITER = false
+LOG_BLOBWRITERDATA = false
+LOG_REDIS = false
 ```
 
 ### Modify Configuration for SendEvent
 
-Start Visual Studio, and open SendEvents.sln, modify Program.cs using your Event hub settings.
+Start Visual Studio, and open the `SendEvents.sln` solution, under the `data-pipeline-storm/src/SendEvents` folder.
+Open the `App.config` file, and set the values according to your configuration settings:
 
-``` C#
-namespace SendEvents
-{
-    class Program
-    {
-			static int numberOfDevices = 1000;
-			static string eventHubName = "[YourEventHubName]";
-			static string eventHubNamespace = "[YourServiceBusNamespaces]";
-			static string devicesSharedAccessPolicyName = "devices";
-			static string devicesSharedAccessPolicyKey = "[YourdevicesSharedAccessPolicyKey]";
-			static string rootManageSharedAccessKey = "YourRootManageSharedAccessKey";
-			...
-    }
-}
+``` xml
+<add key="EventHubName" value="[your event hub name]"/>
+<add key="EventHubNamespace" value="[your event hub namespace]"/>
+<add key="DevicesSharedAccessPolicyName" value="devices"/>
+<add key="DevicesSharedAccessPolicyKey" value="[shared access key for the 'devices' policy of your event hub]"/>
+<add key="RootManageSharedAccessKey" value="[your service bus root management shared access key]"/>
 ```
 
 ## Run the topology

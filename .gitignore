@@ -221,3 +221,7 @@ local.properties
 .idea
 *.ipr
 *.iml
+
+# Don't check in the real config files, because they will contain secrets
+src/eventhub-blobwriter/conf/Config.properties
+src/SendEvents/SendEvents/App.config

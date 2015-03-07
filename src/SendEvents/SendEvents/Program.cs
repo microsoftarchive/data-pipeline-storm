@@ -14,13 +14,6 @@ namespace SendEvents
 {
     class Program
     {
-        static int numberOfDevices = 1000;
-        static string eventHubName = "hanzeventhub1";
-        static string eventHubNamespace = "hanzeventhub1-ns";
-        static string devicesSharedAccessPolicyName = "devices";
-        static string devicesSharedAccessPolicyKey = "XghKStf9qfyX8iDrCE0lVPmh4fvl9ldzBqe33bcaC/Q=";
-        static string rootManageSharedAccessKey = "VremOpcEIYzpxXLIkqjgzT2ZJXBVdTSYxFhkRW6SiY8=";
-        static string eventHubConnectionStr = "Endpoint=sb://" + eventHubNamespace + ".servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=" + rootManageSharedAccessKey;
         static void Main(string[] args)
         {
             var settings = new MessagingFactorySettings()
@@ -29,6 +22,15 @@ namespace SendEvents
                 TransportType = TransportType.Amqp
             };
             var factory = MessagingFactory.Create(ServiceBusEnvironment.CreateServiceUri("sb", eventHubNamespace, ""), settings);
+            // Get values from configuration
+            int numberOfDevices = int.Parse(ConfigurationManager.AppSettings["NumberOfDevices"]);
+            string eventHubName = ConfigurationManager.AppSettings["EventHubName"];
+            string eventHubNamespace = ConfigurationManager.AppSettings["EventHubNamespace"];
+            string devicesSharedAccessPolicyName = ConfigurationManager.AppSettings["DevicesSharedAccessPolicyName"];
+            string devicesSharedAccessPolicyKey = ConfigurationManager.AppSettings["DevicesSharedAccessPolicyKey"];
+
+            string eventHubConnectionString = string.Format("Endpoint=sb://{0}.servicebus.windows.net/;SharedAccessKeyName={1};SharedAccessKey={2};TransportType=Amqp",
+                eventHubNamespace, devicesSharedAccessPolicyName, devicesSharedAccessPolicyKey);
 
             EventHubClient client = EventHubClient.CreateFromConnectionString(eventHubConnectionStr, eventHubName);
 
