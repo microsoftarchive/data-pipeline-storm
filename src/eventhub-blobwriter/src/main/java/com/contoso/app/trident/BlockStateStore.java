@@ -61,9 +61,9 @@ public class BlockStateStore {
 						value = jedis.get(key);
 					} else {
 						if (LogSetting.LOG_REDIS) {
-							logger.info("Error: can't cannect to Redis !!!!!");
+							logger.info("Error: can't connect to Redis !!!!!");
 						}
-						throw new FailedException("can't cannect to Redis");
+						throw new FailedException("can't connect to Redis");
 					}
 				}
 			}
@@ -98,9 +98,9 @@ public class BlockStateStore {
 						}
 					} else {
 						if (LogSetting.LOG_REDIS) {
-							logger.info("Error: can't cannect to Redis !!!!!");
+							logger.info("Error: can't connect to Redis !!!!!");
 						}
-						throw new FailedException("can't cannect to Redis");
+						throw new FailedException("can't connect to Redis");
 					}
 				}
 			}
@@ -140,9 +140,9 @@ public class BlockStateStore {
 					}
 				} else {
 					if (LogSetting.LOG_REDIS) {
-						logger.info("Error: can't cannect to Redis !!!!!");
+						logger.info("Error: can't connect to Redis !!!!!");
 					}
-					throw new FailedException("can't cannect to Redis");
+					throw new FailedException("can't connect to Redis");
 				}
 			}
 			if (LogSetting.LOG_REDIS) {
