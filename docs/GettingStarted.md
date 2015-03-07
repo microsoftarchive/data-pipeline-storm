@@ -17,7 +17,10 @@ Store Event Hub Messages to Microsoft Azure Blob with Trident
   *Refer to [Create a storage account][azure-storage] for instructions.*
 
 ### Create the Azure Redis Cache
-- Create Azure Redis Cache following [How to Use Azure Redis Cache](http://azure.microsoft.com/en-us/documentation/articles/cache-dotnet-how-to-use-azure-redis-cache/ )
+- Create an Azure Redis Cache.  
+  *Refer to the "Create a Redis cache on Azure" section of [How to use Azure Redis Cache with Java][azure-redis-java] for instructions.*
+
+  - Be sure to enable the non-SSL endpoint, as described in that document.
 
 ### Configure Event Hub
 - Create an Azure Service Bus Event Hub with partition count 10 and message retention of 1 days.  
@@ -76,14 +79,6 @@ In order to receive data from Event Hub, we will use the eventhubs-storm-spout.
 
 ```
 mvn install:install-file -Dfile=eventhubs-storm-spout-0.9-jar-with-dependencies.jar -DgroupId=com.microsoft.eventhubs -DartifactId=eventhubs-storm-spout -Dversion=0.9 -Dpackaging=jar
-```
-
-### Install Jedis SDK with SSL Support
-- Clone [jedis sdk with SSL support](https://github.com/RedisLabs/jedis)
-- Use the following command to install the package into the local Maven store. This will allow us to easily add it as a reference in the Storm project in a later step.
-
-```
-mvn clean install -Dmaven.test.skip=true
 ```
 
 ## Clone the source code of the Reference Implementation
@@ -250,6 +245,7 @@ In your development environment, use the following steps to run the topology on 
 [azure-dl]: http://azure.microsoft.com/en-us/downloads/
 [azure-eventhubs]: http://azure.microsoft.com/en-us/documentation/articles/service-bus-event-hubs-csharp-ephcs-getstarted/#create-an-event-hub
 [azure-java]: https://github.com/Azure/azure-sdk-for-java
+[azure-redis-java]: http://azure.microsoft.com/en-us/documentation/articles/cache-java-get-started/
 [azure-storm]: http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-getting-started/#provision-a-storm-cluster-on-the-azure-portal
 [azure-storm-deploy]: http://azure.microsoft.com/en-us/documentation/articles/hdinsight-storm-deploy-monitor-topology/
 [azure-storage]: http://azure.microsoft.com/en-us/documentation/articles/storage-create-storage-account/

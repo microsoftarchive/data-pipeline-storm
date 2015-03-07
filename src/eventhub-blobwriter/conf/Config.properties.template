@@ -24,7 +24,7 @@ storage.blob.block.bytes.max = 10240
 #Redis Cache Configuration
 redis.host = [your redis host name].redis.cache.windows.net
 redis.password = [your redis access key]
-redis.port = 6380
+redis.port = 6379
 redis.timeout = 3600
 
 #string format
