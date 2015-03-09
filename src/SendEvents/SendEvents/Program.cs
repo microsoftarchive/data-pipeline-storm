@@ -2,92 +2,79 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus.Messaging;
 using Newtonsoft.Json;
-using Microsoft.ServiceBus;
-using System.Threading;
-using System.Runtime.Serialization;
+using Newtonsoft.Json.Serialization;
 
 namespace SendEvents
 {
     class Program
     {
-        static int numberOfDevices = 1000;
-        static string eventHubName = "hanzeventhub1";
-        static string eventHubNamespace = "hanzeventhub1-ns";
-        static string devicesSharedAccessPolicyName = "devices";
-        static string devicesSharedAccessPolicyKey = "XghKStf9qfyX8iDrCE0lVPmh4fvl9ldzBqe33bcaC/Q=";
-        static string rootManageSharedAccessKey = "VremOpcEIYzpxXLIkqjgzT2ZJXBVdTSYxFhkRW6SiY8=";
-        static string eventHubConnectionStr = "Endpoint=sb://" + eventHubNamespace + ".servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=" + rootManageSharedAccessKey;
         static void Main(string[] args)
         {
-            var settings = new MessagingFactorySettings()
-            {
-                TokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(devicesSharedAccessPolicyName, devicesSharedAccessPolicyKey),
-                TransportType = TransportType.Amqp
-            };
-            var factory = MessagingFactory.Create(ServiceBusEnvironment.CreateServiceUri("sb", eventHubNamespace, ""), settings);
+            // Get values from configuration
+            int numberOfDevices = int.Parse(ConfigurationManager.AppSettings["NumberOfDevices"]);
+            string eventHubName = ConfigurationManager.AppSettings["EventHubName"];
+            string eventHubNamespace = ConfigurationManager.AppSettings["EventHubNamespace"];
+            string devicesSharedAccessPolicyName = ConfigurationManager.AppSettings["DevicesSharedAccessPolicyName"];
+            string devicesSharedAccessPolicyKey = ConfigurationManager.AppSettings["DevicesSharedAccessPolicyKey"];
 
-            EventHubClient client = EventHubClient.CreateFromConnectionString(eventHubConnectionStr, eventHubName);
+            string eventHubConnectionString = string.Format("Endpoint=sb://{0}.servicebus.windows.net/;SharedAccessKeyName={1};SharedAccessKey={2};TransportType=Amqp",
+                eventHubNamespace, devicesSharedAccessPolicyName, devicesSharedAccessPolicyKey);
 
+            var client = EventHubClient.CreateFromConnectionString(eventHubConnectionString, eventHubName);
+
+            // Configure JSON to serialize properties using camelCase
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings {ContractResolver = new CamelCasePropertyNamesContractResolver()};
+
+            var random = new Random();
+            
             try
             {
-                List<Task> tasks = new List<Task>();
                 Console.WriteLine("Sending messages to Event Hub {0}", client.Path);
-                Random random = new Random();
+
                 while (!Console.KeyAvailable)
                 {
+                    var tasks = new List<Task>();
+
                     // One event per device
                     for (int devices = 0; devices < numberOfDevices; devices++)
                     {
                         // Create the event
-                        Event info = new Event()
+                        var info = new Event()
                         {
-                            id = devices.ToString(),
-                            lat = -30 + random.Next(75),
-                            lng = -120+random.Next(70),
-                            time = DateTime.UtcNow.Ticks,
-                            code = (310 + random.Next(20)).ToString()
+                            Id = devices.ToString(),
+                            Lat = -30 + random.Next(75),
+                            Lng = -120 + random.Next(70),
+                            Time = DateTime.UtcNow.Ticks,
+                            Code = (310 + random.Next(20)).ToString()
                         };
+
                         // Serialize to JSON
                         var serializedString = JsonConvert.SerializeObject(info);
                         Console.WriteLine(serializedString);
-                        EventData data = new EventData(Encoding.UTF8.GetBytes(serializedString))
+                        
+                        // Create the message data
+                        var bytes = Encoding.UTF8.GetBytes(serializedString);
+                        var data = new EventData(bytes)
                         {
-                            PartitionKey = info.id
+                            PartitionKey = info.Id
                         };
 
                         // Send the message to Event Hub
                         tasks.Add(client.SendAsync(data));
                     }
-                    //Thread.Sleep(1000);
+
                     Task.WaitAll(tasks.ToArray());
-                    tasks.Clear();
-                };
+                }
             }
             catch (Exception exp)
             {
                 Console.WriteLine("Error on send: " + exp.Message);
             }
-
         }
-    }
-
-    [DataContract]
-    public class Event
-    {
-        [DataMember]
-        public string id { get; set; }
-        [DataMember]
-        public double lat { get; set; }
-        [DataMember]
-        public double lng { get; set; }
-        [DataMember]
-        public long time { get; set; }
-        [DataMember]
-        public string code { get; set; }
-
     }
 }

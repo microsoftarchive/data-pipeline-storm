@@ -216,3 +216,12 @@ local.properties
 
 # Locally stored "Eclipse launch configurations"
 *.launch
+
+# IntelliJ project files
+.idea
+*.ipr
+*.iml
+
+# Don't check in the real config files, because they will contain secrets
+src/eventhub-blobwriter/conf/Config.properties
+src/SendEvents/SendEvents/App.config

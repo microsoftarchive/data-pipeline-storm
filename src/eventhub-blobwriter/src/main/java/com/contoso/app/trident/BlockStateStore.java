@@ -27,7 +27,6 @@ public class BlockStateStore {
 		private static String password = null;
 		private static int port = -1;
 		private static int timeout = -1;
-		private static boolean useSSL = true;
 
 		static {
 			host = ConfigProperties.getProperty("redis.host");
@@ -55,16 +54,16 @@ public class BlockStateStore {
 			}
 			if (key != null) {
 
-				try (Jedis jedis = new Jedis(host, port, timeout, useSSL)) {
+				try (Jedis jedis = new Jedis(host, port, timeout)) {
 					jedis.auth(password);
 					jedis.connect();
 					if (jedis.isConnected()) {
 						value = jedis.get(key);
 					} else {
 						if (LogSetting.LOG_REDIS) {
-							logger.info("Error: can't cannect to Redis !!!!!");
+							logger.info("Error: can't connect to Redis !!!!!");
 						}
-						throw new FailedException("can't cannect to Redis");
+						throw new FailedException("can't connect to Redis");
 					}
 				}
 			}
@@ -83,7 +82,7 @@ public class BlockStateStore {
 				logger.info("clear keys " + kTxid + ", " + kFirstBlock + ", " + kLastBlock);
 			}
 			if (kTxid != null && kFirstBlock != null && kLastBlock != null) {
-				try (Jedis jedis = new Jedis(host, port, timeout, useSSL)) {
+				try (Jedis jedis = new Jedis(host, port, timeout)) {
 					jedis.auth(password);
 					jedis.connect();
 					if (jedis.isConnected()) {
@@ -99,9 +98,9 @@ public class BlockStateStore {
 						}
 					} else {
 						if (LogSetting.LOG_REDIS) {
-							logger.info("Error: can't cannect to Redis !!!!!");
+							logger.info("Error: can't connect to Redis !!!!!");
 						}
-						throw new FailedException("can't cannect to Redis");
+						throw new FailedException("can't connect to Redis");
 					}
 				}
 			}
@@ -125,7 +124,7 @@ public class BlockStateStore {
 				logger.info(blockState.partitionTxidLogStr + "set(" + kFirstBlock + ") to" + vFirstBlock);
 				logger.info(blockState.partitionTxidLogStr + "set(" + kLastBlock + ") to" + vLastBlock);
 			}
-			try (Jedis jedis = new Jedis(host, port, timeout, useSSL)) {
+			try (Jedis jedis = new Jedis(host, port, timeout)) {
 				jedis.auth(password);
 				jedis.connect();
 				if (jedis.isConnected()) {
@@ -141,9 +140,9 @@ public class BlockStateStore {
 					}
 				} else {
 					if (LogSetting.LOG_REDIS) {
-						logger.info("Error: can't cannect to Redis !!!!!");
+						logger.info("Error: can't connect to Redis !!!!!");
 					}
-					throw new FailedException("can't cannect to Redis");
+					throw new FailedException("can't connect to Redis");
 				}
 			}
 			if (LogSetting.LOG_REDIS) {
