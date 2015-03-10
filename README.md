@@ -25,6 +25,6 @@ Blob exactly-once.
 
 ## Backlog
 
-* **Performance Resut**: The performance result will be published once we finished our performance test.
+* **Performance Resut**: The performance result will be published once we finishes the performance test.
 
-* **Using Zookeeper to store the state**: The current store state in Redis Cache to store the states. We plan to replace that with Zookeeper.
+* **Using Zookeeper to store the state**: The current sample stores state in Redis Cache. We plan to replace that with Zookeeper.
