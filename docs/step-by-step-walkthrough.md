@@ -18,107 +18,107 @@ mvn archetype:generate -DgroupId=com.contoso.app.trident -DartifactId=eventhub-b
 Using a text editor, open the pom.xml file, and add the following to the `<dependencies>` section. You can add them at the end of the section, after the dependency for junit.
 
 ``` xml
-		<dependency>
-			<groupId>org.apache.storm</groupId>
-			<artifactId>storm-core</artifactId>
-			<version>0.9.1-incubating</version>
-			<!-- keep storm out of the jar-with-dependencies -->
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>13.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-			<version>3.2.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.7</version>
-			<!-- keep out of the jar-with-dependencies -->
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.eventhubs</groupId>
-			<artifactId>eventhubs-storm-spout</artifactId>
-			<version>0.9</version>
-		</dependency>
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<version>2.3</version>
-		</dependency>
-		<dependency>
-			<groupId>redis.clients</groupId>
-			<artifactId>jedis</artifactId>
-			<version>2.5.0.ssl</version>
-		</dependency>
+<dependency>
+	<groupId>org.apache.storm</groupId>
+	<artifactId>storm-core</artifactId>
+	<version>0.9.1-incubating</version>
+	<!-- keep storm out of the jar-with-dependencies -->
+	<scope>${storm.scope}</scope>
+</dependency>
+<dependency>
+	<groupId>com.google.guava</groupId>
+	<artifactId>guava</artifactId>
+	<version>13.0.1</version>
+</dependency>
+<dependency>
+	<groupId>commons-collections</groupId>
+	<artifactId>commons-collections</artifactId>
+	<version>3.2.1</version>
+</dependency>
+<dependency>
+	<groupId>org.slf4j</groupId>
+	<artifactId>slf4j-api</artifactId>
+	<version>1.7.7</version>
+	<!-- keep out of the jar-with-dependencies -->
+	<scope>provided</scope>
+</dependency>
+<dependency>
+	<groupId>com.microsoft.eventhubs</groupId>
+	<artifactId>eventhubs-storm-spout</artifactId>
+	<version>0.9</version>
+</dependency>
+<dependency>
+	<groupId>com.google.code.gson</groupId>
+	<artifactId>gson</artifactId>
+	<version>2.3</version>
+</dependency>
+<dependency>
+	<groupId>redis.clients</groupId>
+	<artifactId>jedis</artifactId>
+	<version>2.6.2</version>
+</dependency>
 
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-storage</artifactId>
-			<version>1.3.1</version>
-		</dependency>
+<dependency>
+	<groupId>com.microsoft.azure</groupId>
+	<artifactId>azure-storage</artifactId>
+	<version>1.3.1</version>
+</dependency>
 
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-management</artifactId>
-			<version>0.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-management</artifactId>
-			<version>0.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-management-compute</artifactId>
-			<version>0.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-management-network</artifactId>
-			<version>0.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-management-sql</artifactId>
-			<version>0.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-management-storage</artifactId>
-			<version>0.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-management-websites</artifactId>
-			<version>0.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-media</artifactId>
-			<version>0.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-servicebus</artifactId>
-			<version>0.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-serviceruntime</artifactId>
-			<version>0.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.windowsazure.storage</groupId>
-			<artifactId>microsoft-windowsazure-storage-sdk</artifactId>
-			<version>0.6.0</version>
-	</dependency>
+<dependency>
+	<groupId>com.microsoft.azure</groupId>
+	<artifactId>azure-management</artifactId>
+	<version>0.6.0</version>
+</dependency>
+<dependency>
+	<groupId>com.microsoft.azure</groupId>
+	<artifactId>azure-management</artifactId>
+	<version>0.6.0</version>
+</dependency>
+<dependency>
+	<groupId>com.microsoft.azure</groupId>
+	<artifactId>azure-management-compute</artifactId>
+	<version>0.6.0</version>
+</dependency>
+<dependency>
+	<groupId>com.microsoft.azure</groupId>
+	<artifactId>azure-management-network</artifactId>
+	<version>0.6.0</version>
+</dependency>
+<dependency>
+	<groupId>com.microsoft.azure</groupId>
+	<artifactId>azure-management-sql</artifactId>
+	<version>0.6.0</version>
+</dependency>
+<dependency>
+	<groupId>com.microsoft.azure</groupId>
+	<artifactId>azure-management-storage</artifactId>
+	<version>0.6.0</version>
+</dependency>
+<dependency>
+	<groupId>com.microsoft.azure</groupId>
+	<artifactId>azure-management-websites</artifactId>
+	<version>0.6.0</version>
+</dependency>
+<dependency>
+	<groupId>com.microsoft.azure</groupId>
+	<artifactId>azure-media</artifactId>
+	<version>0.6.0</version>
+</dependency>
+<dependency>
+	<groupId>com.microsoft.azure</groupId>
+	<artifactId>azure-servicebus</artifactId>
+	<version>0.6.0</version>
+</dependency>
+<dependency>
+	<groupId>com.microsoft.azure</groupId>
+	<artifactId>azure-serviceruntime</artifactId>
+	<version>0.6.0</version>
+</dependency>
+<dependency>
+	<groupId>com.microsoft.windowsazure.storage</groupId>
+	<artifactId>microsoft-windowsazure-storage-sdk</artifactId>
+	<version>0.6.0</version>
+</dependency>
 ```
 
 Note: Some dependencies are marked with a scope of *provided* to indicate that these dependencies should be downloaded from the Maven repository and used to build and test the application locally, but that they will also be available in your runtime environment and do not need to be compiled and included in the JAR created by this project.
@@ -127,78 +127,78 @@ Note: Some dependencies are marked with a scope of *provided* to indicate that t
 At the end of the pom.xml file, right before the `</project>` entry, add the following.
 
 ``` xml
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.2</version>
-				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.3</version>
-				<configuration>
-					<createDependencyReducedPom>true</createDependencyReducedPom>
-					<transformers>
-						<transformer
-							implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer">
-						</transformer>
-					</transformers>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<transformers>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass></mainClass>
-								</transformer>
-							</transformers>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.2.1</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>exec</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<executable>java</executable>
-					<includeProjectDependencies>true</includeProjectDependencies>
-					<includePluginDependencies>false</includePluginDependencies>
-					<classpathScope>compile</classpathScope>
-					<mainClass>${storm.topology}</mainClass>
-				</configuration>
-			</plugin>
-		</plugins>
-		<resources>
-			<resource>
-				<directory>${basedir}/conf</directory>
-				<filtering>false</filtering>
-				<includes>
-					<include>Config.properties</include>
-				</includes>
-			</resource>
-		</resources>
-	</build>
+<build>
+	<plugins>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-compiler-plugin</artifactId>
+			<version>3.2</version>
+			<configuration>
+				<source>1.7</source>
+				<target>1.7</target>
+			</configuration>
+		</plugin>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-shade-plugin</artifactId>
+			<version>2.3</version>
+			<configuration>
+				<createDependencyReducedPom>true</createDependencyReducedPom>
+				<transformers>
+					<transformer
+						implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer">
+					</transformer>
+				</transformers>
+			</configuration>
+			<executions>
+				<execution>
+					<phase>package</phase>
+					<goals>
+						<goal>shade</goal>
+					</goals>
+					<configuration>
+						<transformers>
+							<transformer
+								implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+							<transformer
+								implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+								<mainClass></mainClass>
+							</transformer>
+						</transformers>
+					</configuration>
+				</execution>
+			</executions>
+		</plugin>
+		<plugin>
+			<groupId>org.codehaus.mojo</groupId>
+			<artifactId>exec-maven-plugin</artifactId>
+			<version>1.2.1</version>
+			<executions>
+				<execution>
+					<goals>
+						<goal>exec</goal>
+					</goals>
+				</execution>
+			</executions>
+			<configuration>
+				<executable>java</executable>
+				<includeProjectDependencies>true</includeProjectDependencies>
+				<includePluginDependencies>false</includePluginDependencies>
+				<classpathScope>compile</classpathScope>
+				<mainClass>${storm.topology}</mainClass>
+			</configuration>
+		</plugin>
+	</plugins>
+	<resources>
+		<resource>
+			<directory>${basedir}/conf</directory>
+			<filtering>false</filtering>
+			<includes>
+				<include>Config.properties</include>
+			</includes>
+		</resource>
+	</resources>
+</build>
 ```
 
 This tells Maven to do the following when building the project:
@@ -211,7 +211,7 @@ This tells Maven to do the following when building the project:
 eventhubs-storm-spout reads configuration information from a Config.properties file. This tells it what Event Hub to connect to. While you can specify a configuration file when starting the topology on a cluster, including one in the project gives you a known default configuration.
 - In the eventhub-blobwriter directory, create a new directory named conf. This will be a sister directory of src.
 - In the conf directory, create file Config.properties - contains settings for event hub
-- Copy the cloned content to Config.properties file.
+- Copy the cloned content to Config.properties.template file.
 - You should modify the value according to your settings.
 
 ## Add Java classes
@@ -231,9 +231,14 @@ eventhubs-storm-spout reads configuration information from a Config.properties f
 - Create a new file Block.java in directory \eventhub-blobwriter\src\main\java\com\contoso\app\trident\
 - Copy the content from the cloned file to the above file.
 
-### Add BlockList class
+### Add BlockState class
 
-- Create a new file BlockList.java in directory \eventhub-blobwriter\src\main\java\com\contoso\app\trident\
+- Create a new file BlockState.java in directory \eventhub-blobwriter\src\main\java\com\contoso\app\trident\
+- Copy the content from the cloned file to the above file.
+
+### Add BlockStateStore class
+
+- Create a new file BlockStateStore.java in directory \eventhub-blobwriter\src\main\java\com\contoso\app\trident\
 - Copy the content from the cloned file to the above file.
 
 ### Add ByteAggregator class to perform partitionAggregate operation
@@ -249,11 +254,6 @@ eventhubs-storm-spout reads configuration information from a Config.properties f
 ### Add LogSetting class
 
 - Create a new file LogSetting.java in directory \eventhub-blobwriter\src\main\java\com\contoso\app\trident\
-- Copy the content from the cloned file to the above file.
-
-### Add BlobWriterState class to support reading/writing on Azure Redis Cache
-
-- Create a new file BlobWriterState.java in directory \eventhub-blobwriter\src\main\java\com\contoso\app\trident\
 - Copy the content from the cloned file to the above file.
 
 ## Build the project
