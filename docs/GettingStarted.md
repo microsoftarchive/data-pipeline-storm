@@ -13,7 +13,7 @@ Store Event Hub Messages to Microsoft Azure Blob with Trident
 ## Configure Microsoft Azure
 
 ### Create the Azure Storage Account
-- Create an Azure Storage account. 
+- Create an Azure Storage account.
   *Refer to [Create a storage account][azure-storage] for instructions.*
 
 ### Create the Azure Redis Cache
@@ -26,7 +26,7 @@ Store Event Hub Messages to Microsoft Azure Blob with Trident
 - Create an Azure Service Bus Event Hub with partition count 10 and message retention of 1 days.  
   *Refer to the "Create an Event Hub" section of [Get started with Event Hubs][azure-eventhubs] for instructions.*
 
-- Once the event hub has been created, use the Azure Management Portal to select the event hub instance. 
+- Once the event hub has been created, use the Azure Management Portal to select the event hub instance.
   Select *Configure*, then create two new *shared access policies* using the following information.
 
 NAME    | PERMISSIONS
@@ -38,7 +38,7 @@ storm   | Listen
 - Create an Azure HDInsight Storm cluster.  
   *Refer to the "Provision a Storm cluster on the Azure portal" section of [Getting started using Storm on HDInsight][azure-storm]
   for instructions.*
-  
+
 
 ## Install Java Dependencies
 
@@ -57,7 +57,7 @@ mvn clean install -Dmaven.test.skip=true
 > *If you are in a Powershell window, you will need to escape any arguments that start with a hyphen, using a backtick as follows:*
 >
 >     mvn clean install `-Dmaven.test.skip=true
-> 
+>
 > *This also applies to the other commands in this document.*
 
 ### Install Microsoft Azure Storage libraries for Java
@@ -182,7 +182,7 @@ To run on your development machine, use the following steps.
   **Option 1 - Run from the command line**
   - You can also start the topology by running the following command line from the `/src/eventhub-blobwriter` folder:
 
-        mvn compile exec:java -Dstorm.topology=com.contoso.app.trident.BlobWriterTopology
+        mvn compile exec:java -Dstorm.topology=com.contoso.app.trident.BlobWriterTopology -Dstorm.scope=provided
 
   - You can stop the topology by pressing Ctrl-C.
 
@@ -200,6 +200,7 @@ To run on your development machine, use the following steps.
 
 - Verify that the message are uploaded to azure blob.
   - Download, install, and start [Azure Storage Explorer][azure-storage-explorer].
+  - Click **Add Account** to add your storage account.
   - Click **refresh** button and then click on the container for the uploaded blobs.
   - The container will be named `eventhubblobwriter`, followed by the time that the topology was started.
   - Note: You will get a new container every time you restart the topology.
@@ -227,6 +228,7 @@ In your development environment, use the following steps to run the topology on 
 
 - Verify that the message are uploaded to azure blob.
   - Download, install, and start [Azure Storage Explorer][azure-storage-explorer].
+  - Click **Add Account** to add your storage account.
   - Click **refresh** button and then click on the container for the uploaded blobs.
   - The container will be named `eventhubblobwriter`, followed by the time that the topology was started.
   - Note: You will get a new container every time you restart the topology.
