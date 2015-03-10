@@ -22,3 +22,9 @@ Blob exactly-once.
 * [Getting Started](/docs/GettingStarted.md)
 * [Create Java Topology Project eventhub-blobwriter from Scratch](/docs/step-by-step-walkthrough.md)
 * [Design Considerations and Technical How-To](/docs/DesignConsiderations.md)
+
+## Backlog
+
+* **Performance Resut**: The performance result will be published once we finished our performance test.
+
+* **Using Zookeeper to store the state**: The current store state in Redis Cache to store the states. We plan to replace that with Zookeeper.
