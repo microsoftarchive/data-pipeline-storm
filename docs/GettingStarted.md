@@ -189,14 +189,14 @@ To run on your development machine, use the following steps.
   **Option 2 - Run from Eclipse**  
   - Open the `BlobWriterTopology.java` file.
   - Run the topology.  (Press Ctrl-F11.)
-  - Top stop the topology, press the red *Terminate* icon in the Console window.
+  - To stop the topology, press the red *Terminate* icon in the Console window.
 
   **Option 3 - Run from IntelliJ**
   - Open the `BlobWriterTopology.java` file.
   - Click `Run...` from the `Run` menu.
     - It will ask you to create the run configuration.  You can simply select the default "BlobWriterTopology.java" configuration.
     - The topology should start in the Run window.
-  - Top stop the topology, press the red *Terminate* icon in the Run window.
+  - To stop the topology, press the red *Terminate* icon in the Run window.
 
 - Verify that the message are uploaded to azure blob.
   - Download, install, and start [Azure Storage Explorer][azure-storage-explorer].
