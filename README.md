@@ -28,3 +28,6 @@ Blob exactly-once.
 * **Performance Result**: The performance result will be published once we finishes the performance test.
 
 * **Using Zookeeper to store the state**: The current sample stores state in Redis Cache. We plan to replace that with Zookeeper.
+
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
